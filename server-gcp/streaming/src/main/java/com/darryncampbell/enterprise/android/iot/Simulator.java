@@ -74,15 +74,27 @@ public class Simulator implements MqttCallback {
   private String deviceId;
   private String topic;
   private Random rand;
-  private String sz = "20";
+  private String sz = "100";
+  private String model;
   private String lat;
   private String lng;
+  private int battLevel;
+  private int battHealth;
+  private String osVersion;
+  private String patchLevel;
+  private String releaseVersion;
 
   /** Class for simulator. */
   public Simulator(int id, MqttOptions options) {
     rand = new Random();
-    lat = options.lat + String.format("%04d", rand.nextInt(10000));
-    lng = options.lng + String.format("%04d", rand.nextInt(10000));
+    model = options.model;
+	lat = options.lat;// + String.format("%04d", rand.nextInt(10000));
+    lng = options.lng;// + String.format("%04d", rand.nextInt(10000));
+	battLevel = options.battLevel;
+	battHealth = options.battHealth;
+	osVersion = options.osVersion;
+	patchLevel = options.patchLevel;
+	releaseVersion = options.releaseVersion;
     //deviceId = options.deviceId + Integer.toString(id);
     deviceId = options.deviceId;
     String mqttServerAddress =
@@ -113,16 +125,16 @@ public class Simulator implements MqttCallback {
 
   /** Publish temperature data.*/
   public void publish(int t) throws MqttPersistenceException, MqttException {
-    int temp = t;
-    if (t == -1) {
-      do {
-        temp = rand.nextInt(35);
-      } while (temp < 20);
-    }
+//    int temp = t;
+//    if (t == -1) {
+//      do {
+//        temp = rand.nextInt(35);
+//      } while (temp < 20);
+//    }
     long dt = System.currentTimeMillis();
     String payload =
         String.format(
-            "%s,%s,%s,%s,%s,%s", deviceId, Long.toString(dt), Integer.toString(temp), lat, lng, sz);
+            "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", deviceId, Long.toString(dt), model, lat, lng, Integer.toString(battLevel), Integer.toString(battHealth), osVersion, patchLevel, releaseVersion, sz);
 
     MqttMessage message = new MqttMessage(payload.getBytes());
     message.setQos(1);

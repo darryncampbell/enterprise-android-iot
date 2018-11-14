@@ -30,10 +30,16 @@ public class MqttOptions {
   public String deviceId;
   public String privateKeyFile;
   public String algorithm;
+  public String model;
   public String lat;
   public String lng;
+  public int battLevel;
+  public int battHealth;
+  public String osVersion;
+  public String patchLevel;
+  public String releaseVersion;
   public String cloudRegion = "europe-west1";
-  public int numMessages = 10;
+  public int numMessages = 1;
   public String mqttBridgeHostname = "mqtt.googleapis.com";
   public short mqttBridgePort = 8883;
 
@@ -84,6 +90,14 @@ public class MqttOptions {
     options.addOption(
         Option.builder()
             .type(String.class)
+            .longOpt("model")
+            .hasArg()
+            .desc("Device Model")
+            .required()
+            .build());
+    options.addOption(
+        Option.builder()
+            .type(String.class)
             .longOpt("lat")
             .hasArg()
             .desc("Base lattitude")
@@ -95,6 +109,46 @@ public class MqttOptions {
             .longOpt("lng")
             .hasArg()
             .desc("Base longitude")
+            .required()
+            .build());
+    options.addOption(
+        Option.builder()
+            .type(Number.class)
+            .longOpt("battLevel")
+            .hasArg()
+            .desc("Battery Level Percentage")
+            .required()
+            .build());
+    options.addOption(
+        Option.builder()
+            .type(Number.class)
+            .longOpt("battHealth")
+            .hasArg()
+            .desc("Battery Health Percentage")
+            .required()
+            .build());
+    options.addOption(
+        Option.builder()
+            .type(String.class)
+            .longOpt("osVersion")
+            .hasArg()
+            .desc("OS Version")
+            .required()
+            .build());
+    options.addOption(
+        Option.builder()
+            .type(String.class)
+            .longOpt("patchLevel")
+            .hasArg()
+            .desc("OS Security Patch")
+            .required()
+            .build());
+    options.addOption(
+        Option.builder()
+            .type(String.class)
+            .longOpt("releaseVersion")
+            .hasArg()
+            .desc("OS Release Version")
             .required()
             .build());
 
@@ -139,8 +193,15 @@ public class MqttOptions {
       opts.deviceId = commandLine.getOptionValue("device_id");
       opts.privateKeyFile = commandLine.getOptionValue("private_key_file");
       opts.algorithm = commandLine.getOptionValue("algorithm");
+      opts.model = commandLine.getOptionValue("model");
       opts.lat = commandLine.getOptionValue("lat");
       opts.lng = commandLine.getOptionValue("lng");
+      
+	  opts.battLevel = ((Number) commandLine.getParsedOptionValue("battLevel")).intValue();
+      opts.battHealth = ((Number) commandLine.getParsedOptionValue("battHealth")).intValue();
+      opts.osVersion = commandLine.getOptionValue("osVersion");
+      opts.patchLevel = commandLine.getOptionValue("patchLevel");
+      opts.releaseVersion = commandLine.getOptionValue("releaseVersion");
       if (commandLine.hasOption("cloud_region")) {
         opts.cloudRegion = commandLine.getOptionValue("cloud_region");
       }

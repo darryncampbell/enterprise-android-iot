@@ -80,7 +80,7 @@ public class Converter {
     final String projectId = options.getProject();
     final String topic = options.getTopic();
     final String datasetId = "iotds";
-    final String tableName = "temp_sensor";
+    final String tableName = "device_data";
 
     String id = Long.toString(System.currentTimeMillis());
     options.setJobName("converter-" + id);
@@ -107,9 +107,14 @@ public class Converter {
     List<TableFieldSchema> fields = new ArrayList<TableFieldSchema>();
     fields.add(new TableFieldSchema().setName("deviceid").setType("STRING"));
     fields.add(new TableFieldSchema().setName("dt").setType("DATETIME"));
-    fields.add(new TableFieldSchema().setName("temp").setType("FLOAT"));
-    fields.add(new TableFieldSchema().setName("lat").setType("STRING"));
+    fields.add(new TableFieldSchema().setName("model").setType("STRING"));
+	fields.add(new TableFieldSchema().setName("lat").setType("STRING"));
     fields.add(new TableFieldSchema().setName("lng").setType("STRING"));
+	fields.add(new TableFieldSchema().setName("battLevel").setType("INTEGER"));
+	fields.add(new TableFieldSchema().setName("battHealth").setType("INTEGER"));
+	fields.add(new TableFieldSchema().setName("osVersion").setType("STRING"));
+	fields.add(new TableFieldSchema().setName("patchLevel").setType("STRING"));
+	fields.add(new TableFieldSchema().setName("releaseVersion").setType("STRING"));
     TableSchema schema = new TableSchema().setFields(fields);
 
     Pipeline p = Pipeline.create(options);
@@ -146,9 +151,14 @@ public class Converter {
           new TableRow()
               .set("deviceid", attrs[0])
               .set("dt", sdf.format(new Date(Long.parseLong(attrs[1]))))
-              .set("temp", new Double(attrs[2]))
+			  .set("model", attrs[2])
               .set("lat", attrs[3])
-              .set("lng", attrs[4]);
+              .set("lng", attrs[4])
+              .set("battLevel", Integer.parseInt(attrs[5]))
+              .set("battHealth", Integer.parseInt(attrs[6]))
+              .set("osVersion", attrs[7])
+              .set("patchLevel", attrs[8])
+              .set("releaseVersion", attrs[9]);
       c.output(row);
     }
   }
