@@ -40,7 +40,7 @@ import org.joda.time.DateTime;
  * It randomly chooses MQTT sessions and sends a specified number of messages repeatedly.
  */
 public class Simulator implements MqttCallback {
-  public static final int NUM_DEVICES = 30;
+  public static final int NUM_DEVICES = 1;
 
   private static PrivateKey loadKeyFile(String filename, String algorithm) throws Exception {
     byte[] keyBytes = Files.readAllBytes(Paths.get(filename));
@@ -83,7 +83,8 @@ public class Simulator implements MqttCallback {
     rand = new Random();
     lat = options.lat + String.format("%04d", rand.nextInt(10000));
     lng = options.lng + String.format("%04d", rand.nextInt(10000));
-    deviceId = options.deviceId + Integer.toString(id);
+    //deviceId = options.deviceId + Integer.toString(id);
+    deviceId = options.deviceId;
     String mqttServerAddress =
         String.format("ssl://%s:%s", options.mqttBridgeHostname, options.mqttBridgePort);
     String mqttClientId =
