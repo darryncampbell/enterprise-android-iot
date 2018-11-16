@@ -1,18 +1,4 @@
-/**
- * Copyright 2017 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+//  Based heavily on original file located at https://github.com/GoogleCloudPlatform/community/tree/master/tutorials/cloud-iot-rtdp/streaming/src/main/java/com/google/cloud/solutions/rtdp.  Full credit to original author
 
 package com.darryncampbell.enterprise.android.iot;
 
@@ -50,10 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Converter works as a streaming Dataflow job to receive temperature, coordinates and other
+ * Converter works as a streaming Dataflow job to receive 
  * attributes from Cloud Pub/Sub and then, convert and load them into BigQuery.
- * @author teppeiy
- *
  */
 public class Converter {
   private static final Logger LOG = LoggerFactory.getLogger(Converter.class);
@@ -64,8 +48,6 @@ public class Converter {
   /**
    * RtdpOptions extends DataflowPipelineOptions to retrieve a Pub/Sub topic as a command
    * line argument.
-   * @author teppeiy
-   *
    */
   public interface RtdpOptions extends DataflowPipelineOptions {
     String getTopic();

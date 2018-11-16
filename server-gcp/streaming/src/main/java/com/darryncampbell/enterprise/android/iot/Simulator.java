@@ -1,18 +1,4 @@
-/**
- * Copyright 2017 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+//  Based heavily on original file located at https://github.com/GoogleCloudPlatform/community/tree/master/tutorials/cloud-iot-rtdp/streaming/src/main/java/com/google/cloud/solutions/rtdp.  Full credit to original author
 
 package com.darryncampbell.enterprise.android.iot;
 
@@ -37,7 +23,6 @@ import org.joda.time.DateTime;
 
 /*
  * Simulator emulates multiple MQTT clients and establishes sessions to Cloud IoT Core.
- * It randomly chooses MQTT sessions and sends a specified number of messages repeatedly.
  */
 public class Simulator implements MqttCallback {
   public static final int NUM_DEVICES = 1;
@@ -88,14 +73,13 @@ public class Simulator implements MqttCallback {
   public Simulator(int id, MqttOptions options) {
     rand = new Random();
     model = options.model;
-	lat = options.lat;// + String.format("%04d", rand.nextInt(10000));
-    lng = options.lng;// + String.format("%04d", rand.nextInt(10000));
+	lat = options.lat;
+    lng = options.lng;
 	battLevel = options.battLevel;
 	battHealth = options.battHealth;
 	osVersion = options.osVersion;
 	patchLevel = options.patchLevel;
 	releaseVersion = options.releaseVersion;
-    //deviceId = options.deviceId + Integer.toString(id);
     deviceId = options.deviceId;
     String mqttServerAddress =
         String.format("ssl://%s:%s", options.mqttBridgeHostname, options.mqttBridgePort);
@@ -118,19 +102,13 @@ public class Simulator implements MqttCallback {
     }
   }
 
-  /** Publish temperature data using default (generate random).*/
+  /** Publish data.  Does not generate randome data, only publishes the data sent to it in command line args */
   public void publish() throws MqttPersistenceException, MqttException {
     publish(-1);
   }
 
-  /** Publish temperature data.*/
+  /** Publish data.*/
   public void publish(int t) throws MqttPersistenceException, MqttException {
-//    int temp = t;
-//    if (t == -1) {
-//      do {
-//        temp = rand.nextInt(35);
-//      } while (temp < 20);
-//    }
     long dt = System.currentTimeMillis();
     String payload =
         String.format(
