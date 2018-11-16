@@ -25,6 +25,7 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support:support-vector-drawable:28.0.0'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
@@ -40,5 +41,11 @@ dependencies {
     }
     // Uncomment the next line if you want to use RSASSA-PSS (PS256, PS384, PS512) algorithms:
     //runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
+
+    //  Work Manager
+    def work_version = "1.0.0-alpha11"
+    implementation "android.arch.work:work-runtime:$work_version" // use -ktx for Kotlin
+    // optional - Firebase JobDispatcher support
+    implementation "android.arch.work:work-firebase:$work_version"
 
 }

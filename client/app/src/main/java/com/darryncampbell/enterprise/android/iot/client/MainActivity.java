@@ -1,9 +1,11 @@
 package com.darryncampbell.enterprise.android.iot.client;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +20,22 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+import androidx.work.Constraints;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
+public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener,
+        View.OnClickListener {
 
     public static String TAG = "ent-iot-client";
     private static String GCP_DEVICE_ID = "test-device";
@@ -31,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private static String GCP_ALGORITHM = "RS256";
     private static String GCP_CLOUD_REGION = "europe-west1";
     private MQTTInterface mqtt = new MQTTInterface();
+    private UUID sendRealDataWorkId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         Switch switchDummyData = findViewById(R.id.switchSendDummyData);
         switchDummyData.setOnCheckedChangeListener(this);
+        Switch switchSendRealData = findViewById(R.id.switchSendRealData);
+        switchSendRealData.setOnCheckedChangeListener(this);
+
         Button btnConnect = findViewById(R.id.btnConnect);
         btnConnect.setOnClickListener(this);
         Button btnDisconnect = findViewById(R.id.btnDisconnect);
@@ -57,7 +75,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         //  Request permission to read external storage
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.ACCESS_FINE_LOCATION}, 0);
             }
         }
     }
@@ -82,13 +101,13 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
-            Log.v(TAG,"Permission: " + permissions[0] + "was " + grantResults[0]);
+        if(grantResults[0]== PackageManager.PERMISSION_GRANTED && grantResults[1]== PackageManager.PERMISSION_GRANTED){
+            Log.v(TAG,"Required permissions were granted");
             //resume tasks needing this permission
         }
-        else
+        else if (requestCode == 0)
         {
-            String errorMsg = "Read Storage permission is required for MQTTInterface Connection";
+            String errorMsg = "Read Storage permission is required for MQTTInterface Connection.  Location permission is required for Real location data";
             Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
             showMessage(errorMsg);
             Log.e(TAG, errorMsg);
@@ -97,17 +116,19 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-        if (isChecked)
+        if (compoundButton.getId() == R.id.switchSendDummyData)
         {
-            //  Sending dummy data
-            updateUIEnableDummyData(true);
-            //  todo - stop sending real data
+            if (isChecked)
+                updateUIEnableDummyData(true);
+            else
+                updateUIEnableDummyData(false);
         }
-        else
+        else if (compoundButton.getId() == R.id.switchSendRealData)
         {
-            //  Sending real data
-            updateUIEnableDummyData(false);
-            //  todo - send real data
+            if (isChecked)
+                sendRealData(true);
+            else
+                sendRealData(false);
         }
     }
 
@@ -135,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 showMessage("Connected to " + projectId);
             else
                 showMessage("Connect Failed: " + mqtt.getLastConnectionError());
-            //  todo - on connect, start sending real data
         }
         else if (view.getId() == R.id.btnDisconnect)
         {
@@ -152,7 +172,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         }
         else if (view.getId() == R.id.btnSendDummyData)
         {
-            //  todo - Send dummy data to MQTTInterface (if connected)
             if (mqtt.isConnected())
             {
                 TextView txtDeviceId = findViewById(R.id.txtDeviceId);
@@ -184,6 +203,26 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             {
                 showMessage("Did not send message, MQTT is not connected");
             }
+        }
+    }
+
+    private void sendRealData(boolean startSending)
+    {
+        if (startSending)
+        {
+            if (!mqtt.isConnected())
+                showMessage("Data will not be sent until MQTT is manually connected.");
+            PeriodicWorkRequest.Builder sendRealDataBuilder =
+                    new PeriodicWorkRequest.Builder(SendRealDataWorker.class,
+                            PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+            PeriodicWorkRequest sendRealDataWork = sendRealDataBuilder.build();
+            WorkManager.getInstance().enqueue(sendRealDataWork);
+            sendRealDataWorkId = sendRealDataWork.getId();
+        }
+        else
+        {
+            showMessage("Stopping real data from being sent");
+            WorkManager.getInstance().cancelWorkById(sendRealDataWorkId);
         }
     }
 
@@ -284,6 +323,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         TextView lblCloudRegion = findViewById(R.id.lblCloudRegion);
         TextView txtCloudRegion = findViewById(R.id.txtCloudRegion);
         Switch switchSendDummyData = findViewById(R.id.switchSendDummyData);
+        Switch switchSendRealData = findViewById(R.id.switchSendRealData);
         TextView lblModel = findViewById(R.id.lblModel);
         TextView txtModel = findViewById(R.id.txtModel);
         TextView lblLatitude = findViewById(R.id.lblLatitude);
@@ -321,6 +361,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             lblCloudRegion.setVisibility(View.VISIBLE);
             txtCloudRegion.setVisibility(View.VISIBLE);
             switchSendDummyData.setVisibility(View.GONE);
+            switchSendRealData.setVisibility(View.GONE);
             lblModel.setVisibility(View.GONE);
             txtModel.setVisibility(View.GONE);
             lblLatitude.setVisibility(View.GONE);
@@ -358,6 +399,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             lblCloudRegion.setVisibility(View.GONE);
             txtCloudRegion.setVisibility(View.GONE);
             switchSendDummyData.setVisibility(View.VISIBLE);
+            switchSendRealData.setVisibility(View.VISIBLE);
             lblModel.setVisibility(View.VISIBLE);
             txtModel.setVisibility(View.VISIBLE);
             lblLatitude.setVisibility(View.VISIBLE);

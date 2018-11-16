@@ -520,6 +520,16 @@
             app:layout_constraintStart_toEndOf="@+id/btnDisconnect"
             app:layout_constraintTop_toBottomOf="@+id/txtDeviceId" />
 
+        <Switch
+            android:id="@+id/switchSendRealData"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Send Real Data"
+            app:layout_constraintStart_toEndOf="@+id/switchSendDummyData"
+            app:layout_constraintTop_toBottomOf="@+id/txtCloudRegion" />
+
     </android.support.constraint.ConstraintLayout>
     </ScrollView>
 
