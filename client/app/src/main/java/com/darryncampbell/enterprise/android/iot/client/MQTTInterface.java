@@ -36,6 +36,15 @@ public class MQTTInterface {
     private String lastPublishError = "no error";
     private MqttClient client;
 
+    //  Keys associated with MQTT connection
+    public static String MQTT_SERVER_ENDPOINT = "MQTT_SERVER_ENDPOINT";
+    public static String MQTT_DEVICE_ID = "MQTT_DEVICE_ID";
+    public static String MQTT_PROJECT_ID = "MQTT_PROJECT_ID";
+    public static String MQTT_REGISTRY_ID = "MQTT_REGISTRY_ID";
+    public static String MQTT_PRIVATE_KEY_NAME = "MQTT_PRIVATE_KEY_NAME";
+    public static String MQTT_ALGORITHM = "MQTT_ALGORITHM";
+    public static String MQTT_CLOUD_REGION = "MQTT_CLOUD_REGION";
+
     // [START iot_mqtt_jwt]
     /** Create a Cloud IoT Core JWT for the given project id, signed with the given RSA key. */
     private static String createJwtRsa(String projectId, String privateKeyFile) throws Exception {

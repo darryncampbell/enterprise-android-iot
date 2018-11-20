@@ -1,13 +1,17 @@
 package com.darryncampbell.enterprise.android.iot.client;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,8 +35,17 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_DEVICE_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PRIVATE_KEY_NAME;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PROJECT_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_REGISTRY_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_SERVER_ENDPOINT;
 
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener,
         View.OnClickListener {
@@ -46,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private static String GCP_CLOUD_REGION = "europe-west1";
     private MQTTInterface mqtt = new MQTTInterface();
     private UUID sendRealDataWorkId;
+    public static String LOCAL_BROADCAST_MESSAGE = "LOCAL_BROADCAST";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +93,19 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                         Manifest.permission.ACCESS_FINE_LOCATION}, 0);
             }
         }
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter(LOCAL_BROADCAST_MESSAGE));
     }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        sendRealData(false);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+    }
+
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -153,22 +179,22 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             Boolean connectSuccess =
                     mqtt.connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyFile);
             if (connectSuccess)
-                showMessage("Connected to " + projectId);
+                showMessage("Test client connected to " + projectId);
             else
-                showMessage("Connect Failed: " + mqtt.getLastConnectionError());
+                showMessage("Test client connect failed: " + mqtt.getLastConnectionError());
         }
         else if (view.getId() == R.id.btnDisconnect)
         {
             mqtt.disconnect();
-            showMessage("MQTT client is disconnected");
+            showMessage("MQTT test client is disconnected");
         }
         else if (view.getId() == R.id.btnTestConnection)
         {
             boolean isConnected = mqtt.isConnected();
             if (isConnected)
-                showMessage("MQTT client is connected");
+                showMessage("MQTT test client is connected");
             else
-                showMessage("MQTT client is NOT connected");
+                showMessage("MQTT test client is NOT connected");
         }
         else if (view.getId() == R.id.btnSendDummyData)
         {
@@ -215,7 +241,24 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             PeriodicWorkRequest.Builder sendRealDataBuilder =
                     new PeriodicWorkRequest.Builder(SendRealDataWorker.class,
                             PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
-            PeriodicWorkRequest sendRealDataWork = sendRealDataBuilder.build();
+            //  Pass the MQTT connection information to the worker
+            RadioGroup radioGroup = findViewById(R.id.radioGroup);
+            TextView txtDeviceId = findViewById(R.id.txtDeviceId);
+            TextView txtProjectId = findViewById(R.id.txtProjectId);
+            TextView txtRegistryId = findViewById(R.id.txtRegistryId);
+            TextView txtPrivateKeyName = findViewById(R.id.txtPrivateKeyName);
+            TextView txtAlgorithm = findViewById(R.id.txtAlgorithm);
+            TextView txtCloudRegion = findViewById(R.id.txtCloudRegion);
+            Data metaData = new Data.Builder().putInt(MQTT_SERVER_ENDPOINT, radioGroup.getCheckedRadioButtonId())
+                    .putString(MQTT_DEVICE_ID, txtDeviceId.getText().toString())
+                    .putString(MQTT_PROJECT_ID, txtProjectId.getText().toString())
+                    .putString(MQTT_REGISTRY_ID, txtRegistryId.getText().toString())
+                    .putString(MQTT_PRIVATE_KEY_NAME, txtPrivateKeyName.getText().toString())
+                    .putString(MQTT_ALGORITHM, txtAlgorithm.getText().toString())
+                    .putString(MQTT_CLOUD_REGION, txtCloudRegion.getText().toString())
+                    .build();
+            PeriodicWorkRequest sendRealDataWork = sendRealDataBuilder.
+                    setInputData(metaData).build();
             WorkManager.getInstance().enqueue(sendRealDataWork);
             sendRealDataWorkId = sendRealDataWork.getId();
         }
@@ -427,4 +470,12 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         Log.i(TAG, message);
     }
 
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("message");
+            showMessage(message);
+        }
+    };
 }

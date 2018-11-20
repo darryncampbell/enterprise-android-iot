@@ -50,7 +50,7 @@
             android:layout_marginTop="8dp"
             android:text="Connect"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txtDeviceId" />
+            app:layout_constraintTop_toBottomOf="@+id/lblTestConnection" />
 
         <Switch
             android:id="@+id/switchSendDummyData"
@@ -508,7 +508,7 @@
             android:layout_marginTop="8dp"
             android:text="Disconnect"
             app:layout_constraintStart_toEndOf="@+id/btnConnect"
-            app:layout_constraintTop_toBottomOf="@+id/txtDeviceId" />
+            app:layout_constraintTop_toBottomOf="@+id/lblTestConnection" />
 
         <Button
             android:id="@+id/btnTestConnection"
@@ -518,7 +518,7 @@
             android:layout_marginTop="8dp"
             android:text="Test"
             app:layout_constraintStart_toEndOf="@+id/btnDisconnect"
-            app:layout_constraintTop_toBottomOf="@+id/txtDeviceId" />
+            app:layout_constraintTop_toBottomOf="@+id/lblTestConnection" />
 
         <Switch
             android:id="@+id/switchSendRealData"
@@ -529,6 +529,16 @@
             android:text="Send Real Data"
             app:layout_constraintStart_toEndOf="@+id/switchSendDummyData"
             app:layout_constraintTop_toBottomOf="@+id/txtCloudRegion" />
+
+        <TextView
+            android:id="@+id/lblTestConnection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Test Connection"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/txtDeviceId" />
 
     </android.support.constraint.ConstraintLayout>
     </ScrollView>

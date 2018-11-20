@@ -2,12 +2,17 @@ package com.darryncampbell.enterprise.android.iot.client;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -21,11 +26,18 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.text.DecimalFormat;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_DEVICE_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PRIVATE_KEY_NAME;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PROJECT_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_REGISTRY_ID;
 import static com.darryncampbell.enterprise.android.iot.client.MainActivity.TAG;
 
 public class SendRealDataWorker extends Worker implements GoogleApiClient.ConnectionCallbacks,
@@ -34,6 +46,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
     private Location fusedLocation = null;
     private static GoogleApiClient mGoogleApiClient = null;
     private static FusedLocationProviderClient mFusedLocationClient = null;
+    private MQTTInterface mqtt = null;
 
     public SendRealDataWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -72,8 +85,56 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
     @NonNull
     @Override
     public Result doWork() {
+
+        int serverEndpoint = getInputData().getInt(MQTTInterface.MQTT_SERVER_ENDPOINT, R.id.radioGCP);
+        String deviceId = getInputData().getString(MQTT_DEVICE_ID);
+        String projectId = getInputData().getString(MQTT_PROJECT_ID);
+        String registryId = getInputData().getString(MQTT_REGISTRY_ID);
+        String privateKeyName = getInputData().getString(MQTT_PRIVATE_KEY_NAME);
+        String algorithm = getInputData().getString(MQTT_ALGORITHM);
+        String cloudRegion = getInputData().getString(MQTT_CLOUD_REGION);
         Log.i(TAG, "Worker alive, trying to send real data to MQTT server");
-        updateFusedLocationAndSend();
+        Log.i(TAG, "Device ID: " + deviceId + ", project ID" + projectId);
+        //  Device info
+        String osVersion = Build.VERSION.RELEASE;
+        String patchLevel = Build.VERSION.SECURITY_PATCH;
+        String releaseVersion = Build.DISPLAY;
+        //  Battery info
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = getApplicationContext().registerReceiver(null, ifilter);
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = (level / (float)scale) * 100f;
+        String batteryLevel = Float.toString(batteryPct);
+        //  Zebra battery health
+        //  todo test this is returning the health percentage on Zebra device
+        int batteryHealth = batteryStatus.getIntExtra("health_percentage", -1);
+        /*
+        Bundle bundle = batteryStatus.getExtras();
+        if (bundle != null) {
+            for (String key : bundle.keySet()) {
+                Object value = bundle.get(key);
+                Log.d(TAG, String.format("%s %s (%s)", key,
+                        value.toString(), value.getClass().getName()));
+            }
+        }
+        */
+        //  Connect to MQTT server
+        mqtt = new MQTTInterface();
+        if (serverEndpoint == R.id.radioGCP)
+            if (mqtt != null && mqtt.connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyName))
+            {
+                //  Successfully connected to MQTT
+                updateFusedLocationAndSend();
+
+            }
+            else if (mqtt != null)
+            {
+                String connectionErrorMessage = mqtt.getLastConnectionError();
+                Intent intent = new Intent(MainActivity.LOCAL_BROADCAST_MESSAGE);
+                intent.putExtra("message", connectionErrorMessage);
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+            }
         return Result.SUCCESS;
     }
 
@@ -96,7 +157,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                                     longitude = new DecimalFormat("#.#######").format(fusedLocation.getLongitude());
                                 }
                                 Log.i(TAG, "Sending: (lat)" + latitude + ", (long)" + longitude);
-
+                                mqtt.disconnect();
                             }
                         }
                     })
