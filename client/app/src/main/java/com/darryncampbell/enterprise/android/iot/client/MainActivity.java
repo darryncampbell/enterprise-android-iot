@@ -61,10 +61,59 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private UUID sendRealDataWorkId;
     public static String LOCAL_BROADCAST_MESSAGE = "LOCAL_BROADCAST";
 
+    //  UI elements
+    TextView statusText, lblDeviceId, txtDeviceId, lblTestConnection;
+    Button btnConnect, btnDisconnect, btnTestConnection;
+    RadioGroup radioGroup;
+    TextView lblProjectId, txtProjectId, lblRegistryId, txtRegistryId, lblPrivateKeyName, txtPrivateKeyName;
+    TextView lblAlgorithm, txtAlgorithm, lblCloudRegion, txtCloudRegion;
+    Switch switchSendDummyData, switchSendRealData;
+    TextView lblModel, txtModel, lblLatitude, txtLatitude, lblLongitude, txtLongitude, lblBatteryLevel, txtBatteryLevel;
+    TextView lblBatteryHealth, txtBatteryHealth, lblOSVersion, txtOSVersion, lblPatchLevel, txtPatchLevel, lblReleaseVersion, txtReleaseVersion;
+    Button btnSendDummyData;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        statusText = findViewById(R.id.txtStatus);
+        lblDeviceId = findViewById(R.id.lblDeviceId);
+        txtDeviceId = findViewById(R.id.txtDeviceId);
+        lblTestConnection = findViewById(R.id.lblTestConnection);
+        btnConnect = findViewById(R.id.btnConnect);
+        btnDisconnect = findViewById(R.id.btnDisconnect);
+        btnTestConnection = findViewById(R.id.btnTestConnection);
+        radioGroup = findViewById(R.id.radioGroup);
+        lblProjectId = findViewById(R.id.lblProjectId);
+        txtProjectId = findViewById(R.id.txtProjectId);
+        lblRegistryId = findViewById(R.id.lblRegistryId);
+        txtRegistryId = findViewById(R.id.txtRegistryId);
+        lblPrivateKeyName = findViewById(R.id.lblPrivateKeyName);
+        txtPrivateKeyName = findViewById(R.id.txtPrivateKeyName);
+        lblAlgorithm = findViewById(R.id.lblAlgorithm);
+        txtAlgorithm = findViewById(R.id.txtAlgorithm);
+        lblCloudRegion = findViewById(R.id.lblCloudRegion);
+        txtCloudRegion = findViewById(R.id.txtCloudRegion);
+        switchSendDummyData = findViewById(R.id.switchSendDummyData);
+        switchSendRealData = findViewById(R.id.switchSendRealData);
+        lblModel = findViewById(R.id.lblModel);
+        txtModel = findViewById(R.id.txtModel);
+        lblLatitude = findViewById(R.id.lblLatitude);
+        txtLatitude = findViewById(R.id.txtLatitude);
+        lblLongitude = findViewById(R.id.lblLongitude);
+        txtLongitude = findViewById(R.id.txtLongitude);
+        lblBatteryLevel = findViewById(R.id.lblBatteryLevel);
+        txtBatteryLevel = findViewById(R.id.txtBatteryLevel);
+        lblBatteryHealth = findViewById(R.id.lblBatteryHealth);
+        txtBatteryHealth = findViewById(R.id.txtBatteryHealth);
+        lblOSVersion = findViewById(R.id.lblOSVersion);
+        txtOSVersion = findViewById(R.id.txtOSVersion);
+        lblPatchLevel = findViewById(R.id.lblPatchLevel);
+        txtPatchLevel = findViewById(R.id.txtPatchLevel);
+        lblReleaseVersion = findViewById(R.id.lblReleaseVersion);
+        txtReleaseVersion = findViewById(R.id.txtReleaseVersion);
+        btnSendDummyData = findViewById(R.id.btnSendDummyData);
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -72,30 +121,36 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         prePopulateConnectionInfo(R.id.radioGCP);
         prePopulateDummyData();
 
-        Switch switchDummyData = findViewById(R.id.switchSendDummyData);
-        switchDummyData.setOnCheckedChangeListener(this);
-        Switch switchSendRealData = findViewById(R.id.switchSendRealData);
+        switchSendDummyData.setOnCheckedChangeListener(this);
         switchSendRealData.setOnCheckedChangeListener(this);
 
-        Button btnConnect = findViewById(R.id.btnConnect);
         btnConnect.setOnClickListener(this);
-        Button btnDisconnect = findViewById(R.id.btnDisconnect);
         btnDisconnect.setOnClickListener(this);
-        Button btnTestConnection = findViewById(R.id.btnTestConnection);
         btnTestConnection.setOnClickListener(this);
-        Button btnSendDummyData = findViewById(R.id.btnSendDummyData);
         btnSendDummyData.setOnClickListener(this);
 
-        //  Request permission to read external storage
+        //  Request permission to read external storage (needed to read the private key)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.ACCESS_FINE_LOCATION}, 0);
             }
         }
+    }
 
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 new IntentFilter(LOCAL_BROADCAST_MESSAGE));
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
 
     @Override
@@ -103,9 +158,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     {
         super.onDestroy();
         sendRealData(false);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
-
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -129,7 +182,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(grantResults[0]== PackageManager.PERMISSION_GRANTED && grantResults[1]== PackageManager.PERMISSION_GRANTED){
             Log.v(TAG,"Required permissions were granted");
-            //resume tasks needing this permission
         }
         else if (requestCode == 0)
         {
@@ -163,13 +215,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         //  Button handlers
         if (view.getId() == R.id.btnConnect)
         {
-            //  Connect to MQTTInterface server
-            TextView txtDeviceId = findViewById(R.id.txtDeviceId);
-            TextView txtProjectId = findViewById(R.id.txtProjectId);
-            TextView txtRegistryId = findViewById(R.id.txtRegistryId);
-            TextView txtPrivateKeyName = findViewById(R.id.txtPrivateKeyName);
-            TextView txtAlgorithm = findViewById(R.id.txtAlgorithm);
-            TextView txtCloudRegion = findViewById(R.id.txtCloudRegion);
+            //  Test connection to MQTTInterface server
             String deviceId = txtDeviceId.getText().toString();
             String projectId = txtProjectId.getText().toString();
             String cloudRegion = txtCloudRegion.getText().toString();
@@ -200,15 +246,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         {
             if (mqtt.isConnected())
             {
-                TextView txtDeviceId = findViewById(R.id.txtDeviceId);
-                TextView txtModel = findViewById(R.id.txtModel);
-                TextView txtLatitude = findViewById(R.id.txtLatitude);
-                TextView txtLongitude = findViewById(R.id.txtLongitude);
-                TextView txtBatteryLevel = findViewById(R.id.txtBatteryLevel);
-                TextView txtBatteryHealth = findViewById(R.id.txtBatteryHealth);
-                TextView txtOSVersion = findViewById(R.id.txtOSVersion);
-                TextView txtPatchLevel = findViewById(R.id.txtPatchLevel);
-                TextView txtReleaseVersion = findViewById(R.id.txtReleaseVersion);
                 int iBatteryLevel = Integer.parseInt(txtBatteryLevel.getText().toString());
                 int iBatteryHealth = Integer.parseInt(txtBatteryHealth.getText().toString());
                 boolean publishSuccess = mqtt.publish(txtDeviceId.getText().toString(), txtModel.getText().toString(),
@@ -236,19 +273,11 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     {
         if (startSending)
         {
-            if (!mqtt.isConnected())
-                showMessage("Data will not be sent until MQTT is manually connected.");
             PeriodicWorkRequest.Builder sendRealDataBuilder =
                     new PeriodicWorkRequest.Builder(SendRealDataWorker.class,
                             PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
-            //  Pass the MQTT connection information to the worker
-            RadioGroup radioGroup = findViewById(R.id.radioGroup);
-            TextView txtDeviceId = findViewById(R.id.txtDeviceId);
-            TextView txtProjectId = findViewById(R.id.txtProjectId);
-            TextView txtRegistryId = findViewById(R.id.txtRegistryId);
-            TextView txtPrivateKeyName = findViewById(R.id.txtPrivateKeyName);
-            TextView txtAlgorithm = findViewById(R.id.txtAlgorithm);
-            TextView txtCloudRegion = findViewById(R.id.txtCloudRegion);
+            //  Pass the MQTT connection information to the worker.  The long-term worker is responsible for
+            //  making and breaking the MQTT connection when needed.
             Data metaData = new Data.Builder().putInt(MQTT_SERVER_ENDPOINT, radioGroup.getCheckedRadioButtonId())
                     .putString(MQTT_DEVICE_ID, txtDeviceId.getText().toString())
                     .putString(MQTT_PROJECT_ID, txtProjectId.getText().toString())
@@ -272,12 +301,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private void prePopulateConnectionInfo(int cloudServerType)
     {
-        TextView txtDeviceId = findViewById(R.id.txtDeviceId);
-        TextView txtProjectId = findViewById(R.id.txtProjectId);
-        TextView txtRegistryId = findViewById(R.id.txtRegistryId);
-        TextView txtPrivateKeyName = findViewById(R.id.txtPrivateKeyName);
-        TextView txtAlgorithm = findViewById(R.id.txtAlgorithm);
-        TextView txtCloudRegion = findViewById(R.id.txtCloudRegion);
         if (cloudServerType == R.id.radioGCP)
         {
             txtDeviceId.setText(GCP_DEVICE_ID);
@@ -291,14 +314,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private void prePopulateDummyData()
     {
-        TextView txtModel = findViewById(R.id.txtModel);
-        TextView txtLatitude = findViewById(R.id.txtLatitude);
-        TextView txtLongitude = findViewById(R.id.txtLongitude);
-        TextView txtBatteryLevel = findViewById(R.id.txtBatteryLevel);
-        TextView txtBatteryHealth = findViewById(R.id.txtBatteryHealth);
-        TextView txtOSVersion = findViewById(R.id.txtOSVersion);
-        TextView txtPatchLevel = findViewById(R.id.txtPatchLevel);
-        TextView txtReleaseVersion = findViewById(R.id.txtReleaseVersion);
         txtModel.setText(Build.MODEL);
         txtLatitude.setText("-36.8485");
         txtLongitude.setText("174.7633");
@@ -311,23 +326,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private void updateUIEnableDummyData(boolean bEnable)
     {
-        TextView lblModel = findViewById(R.id.lblModel);
-        TextView txtModel = findViewById(R.id.txtModel);
-        TextView lblLatitude = findViewById(R.id.lblLatitude);
-        TextView txtLatitude = findViewById(R.id.txtLatitude);
-        TextView lblLongitude = findViewById(R.id.lblLongitude);
-        TextView txtLongitude = findViewById(R.id.txtLongitude);
-        TextView lblBatteryLevel = findViewById(R.id.lblBatteryLevel);
-        TextView txtBatteryLevel = findViewById(R.id.txtBatteryLevel);
-        TextView lblBatteryHealth = findViewById(R.id.lblBatteryHealth);
-        TextView txtBatteryHealth = findViewById(R.id.txtBatteryHealth);
-        TextView lblOSVersion = findViewById(R.id.lblOSVersion);
-        TextView txtOSVersion = findViewById(R.id.txtOSVersion);
-        TextView lblPatchLevel = findViewById(R.id.lblPatchLevel);
-        TextView txtPatchLevel = findViewById(R.id.txtPatchLevel);
-        TextView lblReleaseVersion = findViewById(R.id.lblReleaseVersion);
-        TextView txtReleaseVersion = findViewById(R.id.txtReleaseVersion);
-        Button btnSendDummyData = findViewById(R.id.btnSendDummyData);
         lblModel.setEnabled(bEnable);
         txtModel.setEnabled(bEnable);
         lblLatitude.setEnabled(bEnable);
@@ -349,46 +347,11 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private void configureUi(int menuId)
     {
-        TextView lblDeviceId = findViewById(R.id.lblDeviceId);
-        TextView txtDeviceId = findViewById(R.id.txtDeviceId);
-        Button btnConnect = findViewById(R.id.btnConnect);
-        Button btnDisconnect = findViewById(R.id.btnDisconnect);
-        Button btnTestConnection = findViewById(R.id.btnTestConnection);
-        RadioGroup radioGroup = findViewById(R.id.radioGroup);
-        TextView lblProjectId = findViewById(R.id.lblProjectId);
-        TextView txtProjectId = findViewById(R.id.txtProjectId);
-        TextView lblRegistryId = findViewById(R.id.lblRegistryId);
-        TextView txtRegistryId = findViewById(R.id.txtRegistryId);
-        TextView lblPrivateKeyName = findViewById(R.id.lblPrivateKeyName);
-        TextView txtPrivateKeyName = findViewById(R.id.txtPrivateKeyName);
-        TextView lblAlgorithm = findViewById(R.id.lblAlgorithm);
-        TextView txtAlgorithm = findViewById(R.id.txtAlgorithm);
-        TextView lblCloudRegion = findViewById(R.id.lblCloudRegion);
-        TextView txtCloudRegion = findViewById(R.id.txtCloudRegion);
-        Switch switchSendDummyData = findViewById(R.id.switchSendDummyData);
-        Switch switchSendRealData = findViewById(R.id.switchSendRealData);
-        TextView lblModel = findViewById(R.id.lblModel);
-        TextView txtModel = findViewById(R.id.txtModel);
-        TextView lblLatitude = findViewById(R.id.lblLatitude);
-        TextView txtLatitude = findViewById(R.id.txtLatitude);
-        TextView lblLongitude = findViewById(R.id.lblLongitude);
-        TextView txtLongitude = findViewById(R.id.txtLongitude);
-        TextView lblBatteryLevel = findViewById(R.id.lblBatteryLevel);
-        TextView txtBatteryLevel = findViewById(R.id.txtBatteryLevel);
-        TextView lblBatteryHealth = findViewById(R.id.lblBatteryHealth);
-        TextView txtBatteryHealth = findViewById(R.id.txtBatteryHealth);
-        TextView lblOSVersion = findViewById(R.id.lblOSVersion);
-        TextView txtOSVersion = findViewById(R.id.txtOSVersion);
-        TextView lblPatchLevel = findViewById(R.id.lblPatchLevel);
-        TextView txtPatchLevel = findViewById(R.id.txtPatchLevel);
-        TextView lblReleaseVersion = findViewById(R.id.lblReleaseVersion);
-        TextView txtReleaseVersion = findViewById(R.id.txtReleaseVersion);
-        Button btnSendDummyData = findViewById(R.id.btnSendDummyData);
-
         if (menuId == R.id.navigation_connect)
         {
             lblDeviceId.setVisibility(View.VISIBLE);
             txtDeviceId.setVisibility(View.VISIBLE);
+            lblTestConnection.setVisibility(View.VISIBLE);
             btnConnect.setVisibility(View.VISIBLE);
             btnDisconnect.setVisibility(View.VISIBLE);
             btnTestConnection.setVisibility(View.VISIBLE);
@@ -427,6 +390,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         {
             lblDeviceId.setVisibility(View.GONE);
             txtDeviceId.setVisibility(View.GONE);
+            lblTestConnection.setVisibility(View.GONE);
             btnConnect.setVisibility(View.GONE);
             btnDisconnect.setVisibility(View.GONE);
             btnTestConnection.setVisibility(View.GONE);
@@ -465,7 +429,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     public void showMessage(String message)
     {
-        TextView statusText = findViewById(R.id.txtStatus);
         statusText.setText(message);
         Log.i(TAG, message);
     }
@@ -474,8 +437,11 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            String message = intent.getStringExtra("message");
-            showMessage(message);
+            if (intent.hasExtra("message"))
+            {
+                String message = intent.getStringExtra("message");
+                showMessage(message);
+            }
         }
     };
 }

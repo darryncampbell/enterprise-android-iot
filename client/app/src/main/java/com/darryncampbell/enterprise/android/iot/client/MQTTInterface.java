@@ -1,14 +1,14 @@
 package com.darryncampbell.enterprise.android.iot.client;
 
+//  Based heavily on the original file located at https://github.com/GoogleCloudPlatform/java-docs-samples/blob/master/iot/api-client/manager/src/main/java/com/example/cloud/iot/examples/MqttExample.java
+//  Full credit to the original authors & released under Apache
+
 import android.os.Environment;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Properties;
@@ -19,7 +19,6 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import io.jsonwebtoken.JwtBuilder;
@@ -27,7 +26,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
 import static com.darryncampbell.enterprise.android.iot.client.MainActivity.TAG;
-
 
 public class MQTTInterface {
     private String mqttBridgeHostname = "mqtt.googleapis.com";
@@ -97,14 +95,13 @@ public class MQTTInterface {
             @Override
             public void connectionLost(Throwable cause) {
                 // Do nothing...
-                //  todo
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 String payload = new String(message.getPayload());
                 System.out.println("Payload : " + payload);
-                // TODO: Insert your parsing / handling of the configuration message here.
+                // Insert your parsing / handling of the configuration message here.
             }
 
             @Override
@@ -246,12 +243,11 @@ public class MQTTInterface {
                         int battHealth, String osVersion, String patchLevel,
                         String releaseVersion) {
         long dt = System.currentTimeMillis();
-        //  todo remove the 100 from the payload
         String payload =
                 String.format(
-                        "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", deviceId, Long.toString(dt), model,
+                        "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", deviceId, Long.toString(dt), model,
                         lat, lng, Integer.toString(battLevel), Integer.toString(battHealth),
-                        osVersion, patchLevel, releaseVersion, "100");
+                        osVersion, patchLevel, releaseVersion);
         String topic = String.format("/devices/%s/events", deviceId);
 
         MqttMessage message = new MqttMessage(payload.getBytes());
