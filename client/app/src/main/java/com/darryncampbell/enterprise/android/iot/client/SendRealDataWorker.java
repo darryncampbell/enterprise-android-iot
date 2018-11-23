@@ -149,29 +149,29 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                         @Override
                         public void onSuccess(Location location) {
                             Log.v(TAG, "Location manager has returned success");
-                            if (location != null) {
-                                fusedLocation = location;
-                                String latitude = "unknown";
-                                String longitude = "unknown";
-                                if (fusedLocation != null) {
-                                    latitude = new DecimalFormat("#.#######").format(fusedLocation.getLatitude());
-                                    longitude = new DecimalFormat("#.#######").format(fusedLocation.getLongitude());
-                                }
-                                Log.i(TAG, "Sending: (lat)" + latitude + ", (long)" + longitude);
-                                Boolean publishSuccess = mqtt.publish(deviceId, model, latitude, longitude, batteryLevel, batteryHealth, osVersion, patchLevel, releaseVersion);
-                                if (!publishSuccess)
-                                {
-                                    String publishError = mqtt.getLastPublishError();
-                                    updateStatusOnMainActivity(publishError);
-                                }
-                                else
-                                {
-                                    long dt = System.currentTimeMillis();
-                                    DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-                                    String formattedTime = formatter.format(dt);
-                                    updateStatusOnMainActivity("Real data published to MQTT at " + formattedTime);
-                                }
+                            fusedLocation = location;
+                            String latitude = "unknown";
+                            String longitude = "unknown";
+                            if (fusedLocation != null) {
+                                latitude = new DecimalFormat("#.#######").format(fusedLocation.getLatitude());
+                                longitude = new DecimalFormat("#.#######").format(fusedLocation.getLongitude());
                             }
+                            Log.i(TAG, "Sending: (lat)" + latitude + ", (long)" + longitude);
+                            Boolean publishSuccess = mqtt.publish(deviceId, model, latitude, longitude, batteryLevel, batteryHealth, osVersion, patchLevel, releaseVersion);
+                            if (!publishSuccess)
+                            {
+                                String publishError = mqtt.getLastPublishError();
+                                updateStatusOnMainActivity(publishError);
+                            }
+                            else
+                            {
+                                long dt = System.currentTimeMillis();
+                                DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+                                String formattedTime = formatter.format(dt);
+                                updateStatusOnMainActivity("Real data published to MQTT at " + formattedTime);
+                            }
+                            //  Regardless of whether the publish succeeded or failed, disconnect from the server
+                            mqtt.disconnect();
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -197,8 +197,6 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
         {
             updateStatusOnMainActivity("Real data not published to server.  Need location access");
         }
-        //  Regardless of whether the publish succeeded or failed, disconnect from the server
-        mqtt.disconnect();
     }
 
     private void updateStatusOnMainActivity(String message)

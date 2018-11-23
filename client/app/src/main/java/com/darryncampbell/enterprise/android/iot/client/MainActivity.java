@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -24,17 +23,11 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -131,7 +124,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         //  Request permission to read external storage (needed to read the private key)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.ACCESS_FINE_LOCATION}, 0);
             }
@@ -204,9 +198,19 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         else if (compoundButton.getId() == R.id.switchSendRealData)
         {
             if (isChecked)
+            {
+                btnConnect.setEnabled(false);
+                btnDisconnect.setEnabled(false);
+                btnTestConnection.setEnabled(false);
                 sendRealData(true);
+            }
             else
+            {
+                btnConnect.setEnabled(true);
+                btnDisconnect.setEnabled(true);
+                btnTestConnection.setEnabled(true);
                 sendRealData(false);
+            }
         }
     }
 
@@ -215,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         //  Button handlers
         if (view.getId() == R.id.btnConnect)
         {
+            switchSendRealData.setEnabled(false);
             //  Test connection to MQTTInterface server
             String deviceId = txtDeviceId.getText().toString();
             String projectId = txtProjectId.getText().toString();
@@ -232,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         else if (view.getId() == R.id.btnDisconnect)
         {
             mqtt.disconnect();
+            switchSendRealData.setEnabled(true);
             showMessage("MQTT test client is disconnected");
         }
         else if (view.getId() == R.id.btnTestConnection)
