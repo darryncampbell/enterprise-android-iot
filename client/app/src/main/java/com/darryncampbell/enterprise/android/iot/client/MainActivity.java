@@ -32,16 +32,17 @@ import androidx.work.Data;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_ALGORITHM;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_CLOUD_REGION;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_DEVICE_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_PRIVATE_KEY_NAME;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_PROJECT_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_REGISTRY_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_SERVER_ENDPOINT;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_DEVICE_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PRIVATE_KEY_NAME;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PROJECT_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_REGISTRY_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_SERVER_ENDPOINT;
+import com.darryncampbell.enterprise.android.iot.client.gcp.MQTTGCP;
 
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener,
-        View.OnClickListener {
+        View.OnClickListener, RadioGroup.OnCheckedChangeListener {
 
     public static String TAG = "ent-iot-client";
     private static String GCP_DEVICE_ID = "test-device";
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     Switch switchSendDummyData, switchSendRealData;
     TextView lblModel, txtModel, lblLatitude, txtLatitude, lblLongitude, txtLongitude, lblBatteryLevel, txtBatteryLevel;
     TextView lblBatteryHealth, txtBatteryHealth, lblOSVersion, txtOSVersion, lblPatchLevel, txtPatchLevel, lblReleaseVersion, txtReleaseVersion;
+    TextView lblEndpoint, txtEndpoint, lblCognitoPoolId, txtCognitoPoolId;
     Button btnSendDummyData;
 
     @Override
@@ -88,6 +90,10 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         txtAlgorithm = findViewById(R.id.txtAlgorithm);
         lblCloudRegion = findViewById(R.id.lblCloudRegion);
         txtCloudRegion = findViewById(R.id.txtCloudRegion);
+        lblEndpoint = findViewById(R.id.lblEndpoint);
+        lblCognitoPoolId = findViewById(R.id.lblCognotoPoolId);
+        txtEndpoint = findViewById(R.id.txtEndpoint);
+        txtCognitoPoolId = findViewById(R.id.txtCognitoPoolId);
         switchSendDummyData = findViewById(R.id.switchSendDummyData);
         switchSendRealData = findViewById(R.id.switchSendRealData);
         lblModel = findViewById(R.id.lblModel);
@@ -112,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         {
             mqtt = new MQTTGCP();
         }
-        else
+        else if (radioGroup.getCheckedRadioButtonId() == R.id.radioAWS)
         {
             //  todo
         }
@@ -125,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         switchSendDummyData.setOnCheckedChangeListener(this);
         switchSendRealData.setOnCheckedChangeListener(this);
+        radioGroup.setOnCheckedChangeListener(this);
 
         btnConnect.setOnClickListener(this);
         btnDisconnect.setOnClickListener(this);
@@ -229,27 +236,34 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         if (view.getId() == R.id.btnConnect)
         {
             switchSendRealData.setEnabled(false);
-            //  Test connection to MQTTGCP server
-            String deviceId = txtDeviceId.getText().toString();
-            String projectId = txtProjectId.getText().toString();
-            String cloudRegion = txtCloudRegion.getText().toString();
-            String registryId = txtRegistryId.getText().toString();
-            String algorithm = txtAlgorithm.getText().toString();
-            String privateKeyFile = txtPrivateKeyName.getText().toString();
-            //todo
             Intent connectionConfiguration = new Intent();
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_PROJECT_ID, projectId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegion);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_REGISTRY_ID, registryId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_ALGORITHM, algorithm);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME, privateKeyFile);
+            if (radioGroup.getCheckedRadioButtonId() == R.id.radioGCP)
+            {
+                //  Test connection to MQTTGCP server
+                String deviceId = txtDeviceId.getText().toString();
+                String projectId = txtProjectId.getText().toString();
+                String cloudRegion = txtCloudRegion.getText().toString();
+                String registryId = txtRegistryId.getText().toString();
+                String algorithm = txtAlgorithm.getText().toString();
+                String privateKeyFile = txtPrivateKeyName.getText().toString();
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_PROJECT_ID, projectId);
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegion);
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_REGISTRY_ID, registryId);
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_ALGORITHM, algorithm);
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME, privateKeyFile);
+            }
+            else if (radioGroup.getCheckedRadioButtonId() == R.id.radioAWS)
+            {
+                //  todo
+            }
+
             mqtt.initialise(connectionConfiguration);
             boolean connectSuccess = mqtt.connect();
             //Boolean connectSuccess =
             //        mqtt.connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyFile);
             if (connectSuccess)
-                showMessage("Test client connected to " + projectId);
+                showMessage("Test client connected to " + mqtt.getEndpointDescription());
             else
                 showMessage("Test client connect failed: " + mqtt.getLastConnectionError());
         }
@@ -257,15 +271,15 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         {
             mqtt.disconnect();
             switchSendRealData.setEnabled(true);
-            showMessage("MQTT test client is disconnected");
+            showMessage("MQTT test client is disconnected from " + mqtt.getEndpointDescription());
         }
         else if (view.getId() == R.id.btnTestConnection)
         {
             boolean isConnected = mqtt.isConnected();
             if (isConnected)
-                showMessage("MQTT test client is connected");
+                showMessage("MQTT test client is connected to " + mqtt.getEndpointDescription());
             else
-                showMessage("MQTT test client is NOT connected");
+                showMessage("MQTT test client is NOT connected to " + mqtt.getEndpointDescription());
         }
         else if (view.getId() == R.id.btnSendDummyData)
         {
@@ -335,6 +349,10 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             txtAlgorithm.setText(GCP_ALGORITHM);
             txtCloudRegion.setText(GCP_CLOUD_REGION);
         }
+        else if (cloudServerType == R.id.radioAWS)
+        {
+            //  todo
+        }
     }
 
     private void prePopulateDummyData()
@@ -381,16 +399,22 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             btnDisconnect.setVisibility(View.VISIBLE);
             btnTestConnection.setVisibility(View.VISIBLE);
             radioGroup.setVisibility(View.VISIBLE);
-            lblProjectId.setVisibility(View.VISIBLE);
-            txtProjectId.setVisibility(View.VISIBLE);
-            lblRegistryId.setVisibility(View.VISIBLE);
-            txtRegistryId.setVisibility(View.VISIBLE);
-            lblPrivateKeyName.setVisibility(View.VISIBLE);
-            txtPrivateKeyName.setVisibility(View.VISIBLE);
-            lblAlgorithm.setVisibility(View.VISIBLE);
-            txtAlgorithm.setVisibility(View.VISIBLE);
+
+            lblProjectId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            txtProjectId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            lblRegistryId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            txtRegistryId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            lblPrivateKeyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            txtPrivateKeyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            lblAlgorithm.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
+            txtAlgorithm.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
             lblCloudRegion.setVisibility(View.VISIBLE);
             txtCloudRegion.setVisibility(View.VISIBLE);
+            lblEndpoint.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
+            txtEndpoint.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
+            lblCognitoPoolId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
+            txtCognitoPoolId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
+
             switchSendDummyData.setVisibility(View.GONE);
             switchSendRealData.setVisibility(View.GONE);
             lblModel.setVisibility(View.GONE);
@@ -409,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             txtPatchLevel.setVisibility(View.GONE);
             lblReleaseVersion.setVisibility(View.GONE);
             txtReleaseVersion.setVisibility(View.GONE);
-            btnSendDummyData.setVisibility(View.GONE);
+            btnSendDummyData.setVisibility(View.INVISIBLE);
         }
         else if (menuId == R.id.navigation_dummy_data)
         {
@@ -430,6 +454,10 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             txtAlgorithm.setVisibility(View.GONE);
             lblCloudRegion.setVisibility(View.GONE);
             txtCloudRegion.setVisibility(View.GONE);
+            lblEndpoint.setVisibility(View.GONE);
+            txtEndpoint.setVisibility(View.GONE);
+            lblCognitoPoolId.setVisibility(View.GONE);
+            txtCognitoPoolId.setVisibility(View.GONE);
             switchSendDummyData.setVisibility(View.VISIBLE);
             switchSendRealData.setVisibility(View.VISIBLE);
             lblModel.setVisibility(View.VISIBLE);
@@ -469,4 +497,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
         }
     };
+
+    @Override
+    public void onCheckedChanged(RadioGroup radioGroup, int i) {
+        configureUi(R.id.navigation_connect);
+    }
 }

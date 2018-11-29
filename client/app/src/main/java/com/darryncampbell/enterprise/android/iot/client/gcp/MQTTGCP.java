@@ -1,4 +1,4 @@
-package com.darryncampbell.enterprise.android.iot.client;
+package com.darryncampbell.enterprise.android.iot.client.gcp;
 
 //  Based heavily on the original file located at https://github.com/GoogleCloudPlatform/java-docs-samples/blob/master/iot/api-client/manager/src/main/java/com/example/cloud/iot/examples/MqttExample.java
 //  Full credit to the original authors & released under Apache
@@ -6,6 +6,8 @@ package com.darryncampbell.enterprise.android.iot.client;
 import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
+
+import com.darryncampbell.enterprise.android.iot.client.MQTTInterface;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -34,6 +36,12 @@ public class MQTTGCP implements MQTTInterface {
     private String lastConnectionError = "no error";
     private String lastPublishError = "no error";
     private MqttClient client;
+    private String deviceId;
+    private String projectId;
+    private String cloudRegion;
+    private String registryId;
+    private String algorithm;
+    private String privateKeyFile;
 
     // [START iot_mqtt_jwt]
     /** Create a Cloud IoT Core JWT for the given project id, signed with the given RSA key. */
@@ -114,17 +122,26 @@ public class MQTTGCP implements MQTTInterface {
         return lastConnectionError;
     }
     public String getLastPublishError() {return lastPublishError; }
+    public String getEndpointDescription() {return "GCP";}
 
     public boolean initialise(Intent configuration)
     {
-        //  todo
-        return true;
+        deviceId = configuration.getStringExtra(MQTTInterface.MQTT_DEVICE_ID);
+        projectId = configuration.getStringExtra(MQTTInterface.MQTT_PROJECT_ID);
+        cloudRegion = configuration.getStringExtra(MQTTInterface.MQTT_CLOUD_REGION);
+        registryId = configuration.getStringExtra(MQTTInterface.MQTT_REGISTRY_ID);
+        algorithm = configuration.getStringExtra(MQTTInterface.MQTT_ALGORITHM);
+        privateKeyFile = configuration.getStringExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME);
+        if (deviceId == null || projectId == null || cloudRegion == null || registryId == null ||
+                algorithm == null || privateKeyFile == null)
+            return false;
+        else
+            return true;
     }
 
     public boolean connect()
     {
-        //  todo
-        return true;
+        return connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyFile);
     }
 
     public boolean connectToGoogleCloudIot(String deviceId, String projectId, String cloudRegion,

@@ -22,4 +22,5 @@ public interface MQTTInterface {
                              String releaseVersion);
     abstract String getLastConnectionError();
     abstract String getLastPublishError();
+    abstract String getEndpointDescription();
 }
