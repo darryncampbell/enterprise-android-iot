@@ -28,18 +28,17 @@ import com.google.android.gms.tasks.Task;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Set;
-import java.util.concurrent.Executor;
 
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_DEVICE_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PRIVATE_KEY_NAME;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PROJECT_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_REGISTRY_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_SERVER_ENDPOINT;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_ALGORITHM;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_CLOUD_REGION;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_DEVICE_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_PRIVATE_KEY_NAME;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_PROJECT_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_REGISTRY_ID;
 import static com.darryncampbell.enterprise.android.iot.client.MainActivity.TAG;
 
 public class SendRealDataWorker extends Worker implements GoogleApiClient.ConnectionCallbacks,
@@ -48,7 +47,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
     private Location fusedLocation = null;
     private static GoogleApiClient mGoogleApiClient = null;
     private static FusedLocationProviderClient mFusedLocationClient = null;
-    private MQTTInterface mqtt = null;
+    private MQTTGCP mqtt = null;
 
     public SendRealDataWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -91,7 +90,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
     public Result doWork()
     {
         //  The details of the MQTT client endpoint are included as input data to the WorkManager job
-        int serverEndpoint = getInputData().getInt(MQTTInterface.MQTT_SERVER_ENDPOINT, R.id.radioGCP);
+        int serverEndpoint = getInputData().getInt(MQTT_SERVER_ENDPOINT, R.id.radioGCP);
         String deviceId = getInputData().getString(MQTT_DEVICE_ID);
         String projectId = getInputData().getString(MQTT_PROJECT_ID);
         String registryId = getInputData().getString(MQTT_REGISTRY_ID);
@@ -119,7 +118,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
         int batteryHealthPct = batteryStatus.getIntExtra("health_percentage", -1);
 
         //  Connect to MQTT server every time we want to send rather rather than try to maintain the connection
-        mqtt = new MQTTInterface();
+        mqtt = new MQTTGCP();
         if (serverEndpoint == R.id.radioGCP)
             if (mqtt != null && deviceId != null &&
                     mqtt.connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyName))

@@ -32,13 +32,13 @@ import androidx.work.Data;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_DEVICE_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PRIVATE_KEY_NAME;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PROJECT_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_REGISTRY_ID;
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_SERVER_ENDPOINT;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_ALGORITHM;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_CLOUD_REGION;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_DEVICE_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_PRIVATE_KEY_NAME;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_PROJECT_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_REGISTRY_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTGCP.MQTT_SERVER_ENDPOINT;
 
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener,
         View.OnClickListener {
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private static String GCP_PRIVATE_KEY_NAME = "rsa_private_pkcs8";
     private static String GCP_ALGORITHM = "RS256";
     private static String GCP_CLOUD_REGION = "europe-west1";
-    private MQTTInterface mqtt = new MQTTInterface();
+    private MQTTInterface mqtt;
     private UUID sendRealDataWorkId;
     public static String LOCAL_BROADCAST_MESSAGE = "LOCAL_BROADCAST";
 
@@ -108,10 +108,19 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         txtReleaseVersion = findViewById(R.id.txtReleaseVersion);
         btnSendDummyData = findViewById(R.id.btnSendDummyData);
 
+        if (radioGroup.getCheckedRadioButtonId() == R.id.radioGCP)
+        {
+            mqtt = new MQTTGCP();
+        }
+        else
+        {
+            //  todo
+        }
+
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         configureUi(R.id.navigation_connect);
-        prePopulateConnectionInfo(R.id.radioGCP);
+        prePopulateConnectionInfo(radioGroup.getCheckedRadioButtonId());
         prePopulateDummyData();
 
         switchSendDummyData.setOnCheckedChangeListener(this);
@@ -179,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         }
         else if (requestCode == 0)
         {
-            String errorMsg = "Read Storage permission is required for MQTTInterface Connection.  Location permission is required for Real location data";
+            String errorMsg = "Read Storage permission is required for MQTTGCP Connection.  Location permission is required for Real location data";
             Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
             showMessage(errorMsg);
             Log.e(TAG, errorMsg);
@@ -220,15 +229,25 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         if (view.getId() == R.id.btnConnect)
         {
             switchSendRealData.setEnabled(false);
-            //  Test connection to MQTTInterface server
+            //  Test connection to MQTTGCP server
             String deviceId = txtDeviceId.getText().toString();
             String projectId = txtProjectId.getText().toString();
             String cloudRegion = txtCloudRegion.getText().toString();
             String registryId = txtRegistryId.getText().toString();
             String algorithm = txtAlgorithm.getText().toString();
             String privateKeyFile = txtPrivateKeyName.getText().toString();
-            Boolean connectSuccess =
-                    mqtt.connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyFile);
+            //todo
+            Intent connectionConfiguration = new Intent();
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_PROJECT_ID, projectId);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegion);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_REGISTRY_ID, registryId);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_ALGORITHM, algorithm);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME, privateKeyFile);
+            mqtt.initialise(connectionConfiguration);
+            boolean connectSuccess = mqtt.connect();
+            //Boolean connectSuccess =
+            //        mqtt.connectToGoogleCloudIot(deviceId, projectId, cloudRegion, registryId, algorithm, privateKeyFile);
             if (connectSuccess)
                 showMessage("Test client connected to " + projectId);
             else
