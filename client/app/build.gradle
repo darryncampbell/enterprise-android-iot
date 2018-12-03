@@ -17,7 +17,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
+
+
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -30,7 +33,9 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation files('libs/org.eclipse.paho.client.mqttv3-1.1.1.jar')
+    //  GCP Client
+    /* Required if you do not pull in the AWS client */
+    //implementation files('libs/org.eclipse.paho.client.mqttv3-1.1.1.jar')
     //implementation files('libs/org.eclipse.paho.android.service-1.1.1.jar')
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
     implementation 'joda-time:joda-time:2.9.4'
@@ -41,6 +46,10 @@ dependencies {
     }
     // Uncomment the next line if you want to use RSASSA-PSS (PS256, PS384, PS512) algorithms:
     //runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
+
+    //  AWS client
+    implementation 'com.amazonaws:aws-android-sdk-iot:2.8.+'
+
 
     //  Work Manager
     def work_version = "1.0.0-alpha11"
