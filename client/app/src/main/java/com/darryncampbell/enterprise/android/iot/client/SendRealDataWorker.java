@@ -15,6 +15,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.darryncampbell.enterprise.android.iot.client.aws.MQTTAWS;
 import com.darryncampbell.enterprise.android.iot.client.gcp.MQTTGCP;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -48,7 +49,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
     private Location fusedLocation = null;
     private static GoogleApiClient mGoogleApiClient = null;
     private static FusedLocationProviderClient mFusedLocationClient = null;
-    private MQTTGCP mqtt = null;
+    private MQTTInterface mqtt = null;
 
     public SendRealDataWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -110,7 +111,21 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
             mqtt = new MQTTGCP();
             Log.v(TAG, "Device ID: " + deviceId + ", project ID" + projectId);
         }
-        mqtt.initialise(connectionConfiguration);
+        else if (serverEndpoint == R.id.radioAWS)
+        {
+            String awsEndpoint = getInputData().getString(MQTTInterface.MQTT_AWS_ENDPOINT);
+            String cognitoPoolId = getInputData().getString(MQTTInterface.MQTT_COGNITO_POOL_ID);
+            String policyName = getInputData().getString(MQTTInterface.MQTT_POLICY_NAME);
+            String cloudRegionString = getInputData().getString(MQTTInterface.MQTT_CLOUD_REGION);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_AWS_ENDPOINT, awsEndpoint);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_COGNITO_POOL_ID, cognitoPoolId);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_POLICY_NAME, policyName);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegionString);
+            mqtt = new MQTTAWS();
+            Log.v(TAG, "Device ID: " + deviceId);
+        }
+        mqtt.initialise(connectionConfiguration, getApplicationContext());
 
         Log.i(TAG, "Worker alive, trying to send real data to MQTT server");
         //  Device info
@@ -139,6 +154,21 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
             {
                 updateStatusOnMainActivity("MQTT Connected to " + mqtt.getEndpointDescription());
                 //  Successfully connected to cloud mqtt, publish data
+                int retries = 0;
+                try {
+                    while (!mqtt.isConnected())
+                    {
+                        retries++;
+                        Thread.sleep(1000);
+                        if (retries > 10)
+                        {
+                            updateStatusOnMainActivity("Unable to connect to AWS");
+                            return Result.SUCCESS;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 updateFusedLocationAndSend(deviceId, model, (int)batteryPct, batteryHealthPct, osVersion, patchLevel, releaseVersion);
             }
             else if (mqtt != null && deviceId != null)

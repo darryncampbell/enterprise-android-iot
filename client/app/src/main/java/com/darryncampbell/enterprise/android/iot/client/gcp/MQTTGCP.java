@@ -3,6 +3,7 @@ package com.darryncampbell.enterprise.android.iot.client.gcp;
 //  Based heavily on the original file located at https://github.com/GoogleCloudPlatform/java-docs-samples/blob/master/iot/api-client/manager/src/main/java/com/example/cloud/iot/examples/MqttExample.java
 //  Full credit to the original authors & released under Apache
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
@@ -124,7 +125,7 @@ public class MQTTGCP implements MQTTInterface {
     public String getLastPublishError() {return lastPublishError; }
     public String getEndpointDescription() {return "GCP";}
 
-    public boolean initialise(Intent configuration)
+    public boolean initialise(Intent configuration, Context context)
     {
         deviceId = configuration.getStringExtra(MQTTInterface.MQTT_DEVICE_ID);
         projectId = configuration.getStringExtra(MQTTInterface.MQTT_PROJECT_ID);
@@ -134,7 +135,10 @@ public class MQTTGCP implements MQTTInterface {
         privateKeyFile = configuration.getStringExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME);
         if (deviceId == null || projectId == null || cloudRegion == null || registryId == null ||
                 algorithm == null || privateKeyFile == null)
+        {
+            lastConnectionError = "Invalid connection configuration";
             return false;
+        }
         else
             return true;
     }
@@ -249,15 +253,19 @@ public class MQTTGCP implements MQTTInterface {
             return client.isConnected();
     }
 
-    public void disconnect()
+    public boolean disconnect()
     {
         if (client != null && isConnected()) {
             try {
                 client.disconnect();
+                return true;
             } catch (MqttException e) {
                 Log.e(TAG, "MQTT Exception during disconnect: " + e.toString());
+                lastConnectionError = e.getMessage();
+                return false;
             }
         }
+        return false;
     }
 
     public boolean publish(String deviceId, String model, String lat, String lng, int battLevel,

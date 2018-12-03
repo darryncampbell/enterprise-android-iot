@@ -1,5 +1,6 @@
 package com.darryncampbell.enterprise.android.iot.client;
 
+import android.content.Context;
 import android.content.Intent;
 
 public interface MQTTInterface {
@@ -12,10 +13,13 @@ public interface MQTTInterface {
     public String MQTT_PRIVATE_KEY_NAME = "MQTT_PRIVATE_KEY_NAME";
     public String MQTT_ALGORITHM = "MQTT_ALGORITHM";
     public String MQTT_CLOUD_REGION = "MQTT_CLOUD_REGION";
+    public String MQTT_AWS_ENDPOINT = "MQTT_AWS_ENDPOINT";
+    public String MQTT_COGNITO_POOL_ID = "MQTT_COGNITO_POOL_ID";
+    public String MQTT_POLICY_NAME = "MQTT_POLICY_NAME";
 
-    abstract boolean initialise(Intent configuration);
+    abstract boolean initialise(Intent configuration, Context context);
     abstract boolean connect();
-    abstract void disconnect();
+    abstract boolean disconnect();
     abstract boolean isConnected();
     abstract boolean publish(String deviceId, String model, String lat, String lng, int battLevel,
                              int battHealth, String osVersion, String patchLevel,
