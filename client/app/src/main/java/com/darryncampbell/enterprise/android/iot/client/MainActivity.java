@@ -36,6 +36,7 @@ import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQT
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_AWS_ENDPOINT;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_COGNITO_POOL_ID;
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CONNECTION_STRING;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_DEVICE_ID;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_POLICY_NAME;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_PRIVATE_KEY_NAME;
@@ -46,6 +47,7 @@ import static com.darryncampbell.enterprise.android.iot.client.UserConfig.AWS_CL
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.AWS_COGNITO_POOL_ID;
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.AWS_CUSTOMER_SPECIFIC_ENDPOINT;
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.AWS_IOT_POLICY_NAME;
+import static com.darryncampbell.enterprise.android.iot.client.UserConfig.AZURE_CONNECTION_STRING;
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.GCP_ALGORITHM;
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.GCP_CLOUD_REGION;
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.GCP_PRIVATE_KEY_NAME;
@@ -53,6 +55,7 @@ import static com.darryncampbell.enterprise.android.iot.client.UserConfig.GCP_PR
 import static com.darryncampbell.enterprise.android.iot.client.UserConfig.GCP_REGISTRY_ID;
 
 import com.darryncampbell.enterprise.android.iot.client.aws.MQTTAWS;
+import com.darryncampbell.enterprise.android.iot.client.azure.MQTTAzure;
 import com.darryncampbell.enterprise.android.iot.client.gcp.MQTTGCP;
 
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener,
@@ -74,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     TextView lblModel, txtModel, lblLatitude, txtLatitude, lblLongitude, txtLongitude, lblBatteryLevel, txtBatteryLevel;
     TextView lblBatteryHealth, txtBatteryHealth, lblOSVersion, txtOSVersion, lblPatchLevel, txtPatchLevel, lblReleaseVersion, txtReleaseVersion;
     TextView lblEndpoint, txtEndpoint, lblCognitoPoolId, txtCognitoPoolId, lblPolicyName, txtPolicyName;
+    TextView lblConnectionString, txtConnectionString;
     Button btnSendDummyData;
 
     @Override
@@ -105,6 +109,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         txtEndpoint = findViewById(R.id.txtEndpoint);
         txtCognitoPoolId = findViewById(R.id.txtCognitoPoolId);
         txtPolicyName = findViewById(R.id.txtPolicyName);
+        lblConnectionString = findViewById(R.id.lblConnectionString);
+        txtConnectionString = findViewById(R.id.txtConnectionString);
         switchSendDummyData = findViewById(R.id.switchSendDummyData);
         switchSendRealData = findViewById(R.id.switchSendRealData);
         lblModel = findViewById(R.id.lblModel);
@@ -269,6 +275,14 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 connectionConfiguration.putExtra(MQTT_POLICY_NAME, policyName);
                 connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegion);
             }
+            else if (radioGroup.getCheckedRadioButtonId() == R.id.radioAzure)
+            {
+                //  Test connection to MQTTAzure server
+                String deviceId = txtDeviceId.getText().toString();
+                String connectionString = txtConnectionString.getText().toString();
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+                connectionConfiguration.putExtra(MQTTInterface.MQTT_CONNECTION_STRING, connectionString);
+            }
 
             if (!mqtt.initialise(connectionConfiguration, getApplicationContext()))
             {
@@ -360,6 +374,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     .putString(MQTT_AWS_ENDPOINT, txtEndpoint.getText().toString()) //  AWS
                     .putString(MQTT_COGNITO_POOL_ID, txtCognitoPoolId.getText().toString()) //  AWS
                     .putString(MQTT_POLICY_NAME, txtPolicyName.getText().toString())    //  AWS
+                    .putString(MQTT_CONNECTION_STRING, txtConnectionString.getText().toString()) //  Azure
                     .build();
             PeriodicWorkRequest sendRealDataWork = sendRealDataBuilder.
                     setInputData(metaData).build();
@@ -395,6 +410,11 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             txtCognitoPoolId.setText(AWS_COGNITO_POOL_ID);
             txtPolicyName.setText(AWS_IOT_POLICY_NAME);
             txtCloudRegion.setText(AWS_CLOUD_REGION);
+        }
+        else if (cloudServerType == R.id.radioAzure)
+        {
+            mqtt = new MQTTAzure();
+            txtConnectionString.setText(AZURE_CONNECTION_STRING);
         }
     }
 
@@ -451,14 +471,17 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             txtPrivateKeyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
             lblAlgorithm.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
             txtAlgorithm.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.VISIBLE : View.GONE);
-            lblCloudRegion.setVisibility(View.VISIBLE);
-            txtCloudRegion.setVisibility(View.VISIBLE);
-            lblEndpoint.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
-            txtEndpoint.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
-            lblCognitoPoolId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
-            txtCognitoPoolId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
-            lblPolicyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
-            txtPolicyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioGCP ? View.GONE: View.VISIBLE);
+            lblEndpoint.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAWS ? View.VISIBLE: View.GONE);
+            txtEndpoint.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAWS ? View.VISIBLE: View.GONE);
+            lblCognitoPoolId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAWS ? View.VISIBLE: View.GONE);
+            txtCognitoPoolId.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAWS ? View.VISIBLE: View.GONE);
+            lblPolicyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAWS ? View.VISIBLE: View.GONE);
+            txtPolicyName.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAWS ? View.VISIBLE: View.GONE);
+            lblConnectionString.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAzure ? View.VISIBLE: View.GONE);
+            txtConnectionString.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAzure ? View.VISIBLE: View.GONE);
+            //  Both GCP and AWS
+            lblCloudRegion.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAzure ? View.GONE: View.VISIBLE);
+            txtCloudRegion.setVisibility(radioGroup.getCheckedRadioButtonId() == R.id.radioAzure ? View.GONE: View.VISIBLE);
 
             switchSendDummyData.setVisibility(View.GONE);
             switchSendRealData.setVisibility(View.GONE);
@@ -505,6 +528,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             txtCognitoPoolId.setVisibility(View.GONE);
             lblPolicyName.setVisibility(View.GONE);
             txtPolicyName.setVisibility(View.GONE);
+            lblConnectionString.setVisibility(View.GONE);
+            txtConnectionString.setVisibility(View.GONE);
             switchSendDummyData.setVisibility(View.VISIBLE);
             switchSendRealData.setVisibility(View.VISIBLE);
             lblModel.setVisibility(View.VISIBLE);

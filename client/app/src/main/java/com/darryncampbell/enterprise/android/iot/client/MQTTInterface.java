@@ -16,6 +16,7 @@ public interface MQTTInterface {
     public String MQTT_AWS_ENDPOINT = "MQTT_AWS_ENDPOINT";
     public String MQTT_COGNITO_POOL_ID = "MQTT_COGNITO_POOL_ID";
     public String MQTT_POLICY_NAME = "MQTT_POLICY_NAME";
+    String MQTT_CONNECTION_STRING = "MQTT_CONNECTION_STRING";
 
     abstract boolean initialise(Intent configuration, Context context);
     abstract boolean connect();

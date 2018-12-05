@@ -18,6 +18,16 @@ android {
         }
     }
 
+    packagingOptions {
+        exclude "META-INF/MSFTSIG.SF"
+        exclude "META-INF/MSFTSIG.RSA"
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'thirdpartynotice.txt'
+    }
 }
 
 
@@ -50,6 +60,10 @@ dependencies {
     //  AWS client
     implementation 'com.amazonaws:aws-android-sdk-iot:2.8.+'
 
+    //  Azure
+    implementation ('com.microsoft.azure.sdk.iot:iot-device-client:1.14.0'){
+        exclude module: 'azure-storage'
+    }
 
     //  Work Manager
     def work_version = "1.0.0-alpha11"

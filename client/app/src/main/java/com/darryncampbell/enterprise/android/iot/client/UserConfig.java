@@ -22,4 +22,8 @@ public class UserConfig {
     public static final String AWS_KEYSTORE_PASSWORD = "password";
     public static final String AWS_CERTIFICATE_ID = "default";
     public static final String AWS_TOPIC = "deviceTelemetry";
+
+    //  Default configuration for Azure IoT
+    public static final String AZURE_CONNECTION_STRING = "HostName=xxxxxxxxx.azure-devices.net;DeviceId=xxxxxxx;SharedAccessKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    public static final int AZURE_CRITICAL_BATTERY_LEVEL = 15;
 }

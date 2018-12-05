@@ -97,16 +97,15 @@
                 app:layout_constraintStart_toEndOf="@+id/radioGCP"
                 app:layout_constraintTop_toBottomOf="@+id/switchSendDummyData" />
 
-            <!--RadioButton
+            <RadioButton
                 android:id="@+id/radioAzure"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:enabled="false"
                 android:text="Azure"
                 app:layout_constraintStart_toEndOf="@+id/radioAWS"
-                app:layout_constraintTop_toBottomOf="@+id/switchSendDummyData" /-->
+                app:layout_constraintTop_toBottomOf="@+id/switchSendDummyData" />
 
         </RadioGroup>
 
@@ -498,7 +497,7 @@
             android:text=""
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/lblCloudRegion"
-            app:layout_constraintTop_toBottomOf="@+id/txtPolicyName" />
+            app:layout_constraintTop_toBottomOf="@+id/txtConnectionString" />
 
         <Button
             android:id="@+id/btnDisconnect"
@@ -558,7 +557,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:textSize="18sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/lblCognotoPoolId"
             app:layout_constraintTop_toBottomOf="@+id/txtAlgorithm" />
@@ -582,6 +581,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:ems="10"
+            android:textSize="14sp"
             android:inputType="textPersonName"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/lblCognotoPoolId"
@@ -603,13 +603,37 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="13dp"
             android:layout_marginEnd="8dp"
             android:ems="10"
             android:inputType="textPersonName"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/lblCognotoPoolId"
             app:layout_constraintTop_toBottomOf="@+id/txtCognitoPoolId" />
+
+        <TextView
+            android:id="@+id/lblConnectionString"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Connection\nString"
+            android:textSize="18sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/txtConnectionString" />
+
+        <EditText
+            android:id="@+id/txtConnectionString"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:ems="10"
+            android:textSize="14sp"
+            android:inputType="textPersonName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/lblConnectionString"
+            app:layout_constraintTop_toBottomOf="@+id/txtPolicyName" />
 
     </android.support.constraint.ConstraintLayout>
     </ScrollView>
