@@ -28,4 +28,6 @@ public interface MQTTInterface {
     abstract String getLastConnectionError();
     abstract String getLastPublishError();
     abstract String getEndpointDescription();
+
+    abstract boolean getPublishInProgress();
 }

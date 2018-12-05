@@ -125,6 +125,14 @@ public class MQTTGCP implements MQTTInterface {
     public String getLastPublishError() {return lastPublishError; }
     public String getEndpointDescription() {return "GCP";}
 
+    @Override
+    public boolean getPublishInProgress()
+    {
+        //  AWS publish is synchronous so just return false;
+        return false;
+    }
+
+
     public boolean initialise(Intent configuration, Context context)
     {
         deviceId = configuration.getStringExtra(MQTTInterface.MQTT_DEVICE_ID);

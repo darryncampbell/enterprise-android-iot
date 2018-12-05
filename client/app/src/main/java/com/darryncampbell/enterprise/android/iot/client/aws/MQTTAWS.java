@@ -296,6 +296,13 @@ public class MQTTAWS implements MQTTInterface {
         return "AWS";
     }
 
+    @Override
+    public boolean getPublishInProgress()
+    {
+        //  AWS publish is synchronous so just return false;
+        return false;
+    }
+
     private void updateStatusOnMainActivity(String message)
     {
         //  If the UI is available and listening, update it with the latest status

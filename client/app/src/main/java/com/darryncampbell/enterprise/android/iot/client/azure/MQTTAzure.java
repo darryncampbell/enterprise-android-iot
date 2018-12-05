@@ -32,6 +32,7 @@ public class MQTTAzure implements MQTTInterface {
     private DeviceClient client;
     private boolean connected = false;
     private Context context;
+    private boolean publishInProgress = false;
 
     @Override
     public boolean initialise(Intent configuration, Context context) {
@@ -94,6 +95,7 @@ public class MQTTAzure implements MQTTInterface {
 
     @Override
     public boolean publish(String deviceId, String model, String lat, String lng, int battLevel, int battHealth, String osVersion, String patchLevel, String releaseVersion) {
+        publishInProgress = true;
         long dt = System.currentTimeMillis();
         DateFormat formatter = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss");
         String dateTime = formatter.format(dt);
@@ -104,13 +106,14 @@ public class MQTTAzure implements MQTTInterface {
             msgPayload.put("model", model);
             msgPayload.put("lat", lat);
             msgPayload.put("lng", lng);
-            msgPayload.put("battLevel", Integer.toString(battLevel));
-            msgPayload.put("battHealth", Integer.toString(battHealth));
+            msgPayload.put("battLevel", battLevel);
+            msgPayload.put("battHealth", battHealth);
             msgPayload.put("osVersion", osVersion);
             msgPayload.put("patchLevel", patchLevel);
             msgPayload.put("releaseVersion", releaseVersion);
         } catch (JSONException e) {
             e.printStackTrace();
+            publishInProgress = false;
             lastPublishError = e.getMessage();
             return false;
         }
@@ -140,20 +143,27 @@ public class MQTTAzure implements MQTTInterface {
         return "Azure";
     }
 
+    @Override
+    public boolean getPublishInProgress() {return publishInProgress;}
+
     class EventCallback implements IotHubEventCallback
     {
         public void execute(IotHubStatusCode status, Object context)
         {
+            long dt = System.currentTimeMillis();
+            DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+            String formattedTime = formatter.format(dt);
             if((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY))
             {
                 //  Publish success
-                updateStatusOnMainActivity("Data successfully published to Azure");
+                updateStatusOnMainActivity("Data successfully published to Azure at " + formattedTime);
             }
             else
             {
                 //  Publish fail
-                updateStatusOnMainActivity("Data publish to Azure has FAILED");
+                updateStatusOnMainActivity("Data publish to Azure has FAILED " + formattedTime);
             }
+            publishInProgress = false;
         }
     }
 

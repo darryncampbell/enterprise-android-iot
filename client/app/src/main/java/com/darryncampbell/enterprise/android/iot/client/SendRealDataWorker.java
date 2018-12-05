@@ -16,6 +16,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.darryncampbell.enterprise.android.iot.client.aws.MQTTAWS;
+import com.darryncampbell.enterprise.android.iot.client.azure.MQTTAzure;
 import com.darryncampbell.enterprise.android.iot.client.gcp.MQTTGCP;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -34,6 +35,7 @@ import java.text.SimpleDateFormat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CONNECTION_STRING;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_SERVER_ENDPOINT;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
@@ -125,6 +127,14 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
             mqtt = new MQTTAWS();
             Log.v(TAG, "Device ID: " + deviceId);
         }
+        else if (serverEndpoint == R.id.radioAzure)
+        {
+            String connectionString = getInputData().getString(MQTTInterface.MQTT_CONNECTION_STRING);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+            connectionConfiguration.putExtra(MQTTInterface.MQTT_CONNECTION_STRING, connectionString);
+            mqtt = new MQTTAzure();
+            Log.v(TAG, "Device ID: " + deviceId);
+        }
         mqtt.initialise(connectionConfiguration, getApplicationContext());
 
         Log.i(TAG, "Worker alive, trying to send real data to MQTT server");
@@ -153,7 +163,6 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
         if (mqtt != null && mqtt.connect())
             {
                 updateStatusOnMainActivity("MQTT Connected to " + mqtt.getEndpointDescription());
-                //  Successfully connected to cloud mqtt, publish data
                 int retries = 0;
                 try {
                     while (!mqtt.isConnected())
@@ -162,6 +171,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                         Thread.sleep(1000);
                         if (retries > 10)
                         {
+                            //  Successfully connected to cloud mqtt, publish data
                             updateStatusOnMainActivity("Unable to connect to AWS");
                             return Result.SUCCESS;
                         }
@@ -214,6 +224,23 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                                 updateStatusOnMainActivity("Real data published to MQTT at " + formattedTime);
                             }
                             //  Regardless of whether the publish succeeded or failed, disconnect from the server
+                            int retries = 0;
+                            try {
+                                while (mqtt.getPublishInProgress())
+                                {
+                                    retries++;
+                                    Thread.sleep(1000);
+                                    if (retries > 10)
+                                    {
+                                        //  Successfully connected to cloud mqtt, publish data
+                                        updateStatusOnMainActivity("Timeout publishing data");
+                                        break;
+                                    }
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
                             mqtt.disconnect();
                         }
                     })
