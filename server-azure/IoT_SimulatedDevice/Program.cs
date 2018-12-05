@@ -12,7 +12,7 @@ namespace SimulatedDevice
     class Program
     {
         private static DeviceClient s_deviceClient;
-        private readonly static string s_myDeviceId = "test-device";    //  CHANGE THIS
+        private readonly static string s_myDeviceId = "test-device";    //  CHANGE THIS IF NECESSARY
         private readonly static string s_iotHubUri = "XXXXXXXXXXXXXX.azure-devices.net"; //  CHANGE THIS
         // This is the primary key for the device. This is in the portal. 
         // Find your IoT hub in the portal > IoT devices > select your device > copy the key. 
@@ -27,52 +27,47 @@ namespace SimulatedDevice
         }
         private static async void SendDeviceToCloudMessagesAsync()
         {
-            double minTemperature = 20;
-            double minHumidity = 60;
+            double minBattLevel = 10;
+            double minBattHealth = 80;
             Random rand = new Random();
 
             while (true)
             {
-                double currentTemperature = minTemperature + rand.NextDouble() * 15;
-                double currentHumidity = minHumidity + rand.NextDouble() * 20;
+                double currentBattLevel = minBattLevel + rand.NextDouble() * 25;
+                double currentBattHealth = minBattHealth + rand.NextDouble() * 20;
 
-                string infoString;
                 string levelValue;
 
-                if (rand.NextDouble() > 0.7)
+                if (currentBattLevel < 15.0)
                 {
-                    if (rand.NextDouble() > 0.5)
-                    {
-                        levelValue = "critical";
-                        infoString = "This is a critical message.";
-                    }
-                    else
-                    {
-                        levelValue = "storage";
-                        infoString = "This is a storage message.";
-                    }
+                    levelValue = "critical";
                 }
                 else
                 {
                     levelValue = "normal";
-                    infoString = "This is a normal message.";
                 }
 
                 var telemetryDataPoint = new
                 {
                     deviceId = s_myDeviceId,
-                    temperature = currentTemperature,
-                    humidity = currentHumidity,
-                    pointInfo = infoString
+                    dateTime = DateTime.Now.ToString(),
+                    model = "TC57",
+                    lat = "35.6602997",
+                    lng = "139.7282743",
+                    battLevel = currentBattLevel,
+                    battHealth = currentBattHealth,
+                    osVersion = "8.1.0",
+                    patchLevel = "2019-02-01",
+                    releaseVersion = "01-10-09.00-OG-U00-STD"
                 };
                 var telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
 
                 //set the body of the message to the serialized value of the telemetry data
                 var message = new Message(Encoding.ASCII.GetBytes(telemetryDataString));
-                message.Properties.Add("level", levelValue);
+                message.Properties.Add("batteryLevel", levelValue);
 
                 await s_deviceClient.SendEventAsync(message);
-                Console.WriteLine("{0} > Sent message: {1}", DateTime.Now, telemetryDataString);
+                Console.WriteLine("{0} > Battery Level: {1} Sent message: {2}", DateTime.Now, levelValue, telemetryDataString);
 
                 await Task.Delay(1000);
             }

@@ -1,0 +1,59 @@
+# This is the IOT Extension for Azure CLI.
+# You only need to install this the first time.
+# You need it to create the device identity. 
+az extension add --name azure-cli-iot-ext
+
+# Set the values for the resource names that don't have to be globally unique.
+# The resources that have to have unique names are named in the script below
+#   with a random number concatenated to the name so you can probably just
+#   run this script, and it will work with no conflicts.
+location=westus
+resourceGroup=EntAndroidResources
+iotHubConsumerGroup=EntAndroidConsumers
+containerName=entandroidresults
+iotDeviceName=test-device 
+
+# Create the resource group to be used
+#   for all the resources for this tutorial.
+az group create --name $resourceGroup \
+    --location $location
+
+# The IoT hub name must be globally unique, so add a random number to the end.
+iotHubName=EntAndroidHub$RANDOM
+echo "IoT hub name = " $iotHubName
+
+# Create the IoT hub.
+az iot hub create --name $iotHubName \
+    --resource-group $resourceGroup \
+    --sku S1 --location $location
+
+# Add a consumer group to the IoT hub.
+az iot hub consumer-group create --hub-name $iotHubName \
+    --name $iotHubConsumerGroup
+
+# The Service Bus namespace must be globally unique, so add a random number to the end.
+sbNameSpace=EntAndroidSBNamespace$RANDOM
+echo "Service Bus namespace = " $sbNameSpace
+
+# Create the Service Bus namespace.
+az servicebus namespace create --resource-group $resourceGroup \
+    --name $sbNameSpace \
+    --location $location
+
+# The Service Bus queue name must be globally unique, so add a random number to the end.
+sbQueueName=EntAndroidSBQueue$RANDOM
+echo "Service Bus queue name = " $sbQueueName
+
+# Create the Service Bus queue to be used as a routing destination.
+az servicebus queue create --name $sbQueueName \
+    --namespace-name $sbNameSpace \
+    --resource-group $resourceGroup
+
+# Create the IoT device identity to be used for testing.
+az iot hub device-identity create --device-id $iotDeviceName \
+    --hub-name $iotHubName
+
+# Retrieve the information about the device identity, then copy the primary key to
+#   Notepad. You need this to run the device simulation during the testing phase.
+az iot hub device-identity show --device-id $iotDeviceName \
+    --hub-name $iotHubName
