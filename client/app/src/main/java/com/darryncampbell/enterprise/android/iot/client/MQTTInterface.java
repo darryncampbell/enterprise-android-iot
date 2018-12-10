@@ -1,33 +1,32 @@
 package com.darryncampbell.enterprise.android.iot.client;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 
 public interface MQTTInterface {
 
     //  Keys associated with MQTT connection
-    public String MQTT_SERVER_ENDPOINT = "MQTT_SERVER_ENDPOINT";
-    public String MQTT_DEVICE_ID = "MQTT_DEVICE_ID";
-    public String MQTT_PROJECT_ID = "MQTT_PROJECT_ID";
-    public String MQTT_REGISTRY_ID = "MQTT_REGISTRY_ID";
-    public String MQTT_PRIVATE_KEY_NAME = "MQTT_PRIVATE_KEY_NAME";
-    public String MQTT_ALGORITHM = "MQTT_ALGORITHM";
-    public String MQTT_CLOUD_REGION = "MQTT_CLOUD_REGION";
-    public String MQTT_AWS_ENDPOINT = "MQTT_AWS_ENDPOINT";
-    public String MQTT_COGNITO_POOL_ID = "MQTT_COGNITO_POOL_ID";
-    public String MQTT_POLICY_NAME = "MQTT_POLICY_NAME";
+    String MQTT_SERVER_ENDPOINT = "MQTT_SERVER_ENDPOINT";
+    String MQTT_DEVICE_ID = "MQTT_DEVICE_ID";
+    String MQTT_PROJECT_ID = "MQTT_PROJECT_ID";
+    String MQTT_REGISTRY_ID = "MQTT_REGISTRY_ID";
+    String MQTT_PRIVATE_KEY_NAME = "MQTT_PRIVATE_KEY_NAME";
+    String MQTT_ALGORITHM = "MQTT_ALGORITHM";
+    String MQTT_CLOUD_REGION = "MQTT_CLOUD_REGION";
+    String MQTT_AWS_ENDPOINT = "MQTT_AWS_ENDPOINT";
+    String MQTT_COGNITO_POOL_ID = "MQTT_COGNITO_POOL_ID";
+    String MQTT_POLICY_NAME = "MQTT_POLICY_NAME";
     String MQTT_CONNECTION_STRING = "MQTT_CONNECTION_STRING";
 
-    abstract boolean initialise(Intent configuration, Context context);
-    abstract boolean connect();
-    abstract boolean disconnect();
-    abstract boolean isConnected();
-    abstract boolean publish(String deviceId, String model, String lat, String lng, int battLevel,
+    boolean initialise(Bundle configuration, Context context);
+    boolean connect();
+    boolean disconnect();
+    boolean isConnected();
+    boolean publish(String deviceId, String model, String lat, String lng, int battLevel,
                              int battHealth, String osVersion, String patchLevel,
                              String releaseVersion);
-    abstract String getLastConnectionError();
-    abstract String getLastPublishError();
-    abstract String getEndpointDescription();
-
-    abstract boolean getPublishInProgress();
+    String getLastConnectionError();
+    String getLastPublishError();
+    String getEndpointDescription();
+    boolean getPublishInProgress();
 }

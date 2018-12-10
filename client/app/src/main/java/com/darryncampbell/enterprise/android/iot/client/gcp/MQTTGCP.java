@@ -2,9 +2,10 @@ package com.darryncampbell.enterprise.android.iot.client.gcp;
 
 //  Based heavily on the original file located at https://github.com/GoogleCloudPlatform/java-docs-samples/blob/master/iot/api-client/manager/src/main/java/com/example/cloud/iot/examples/MqttExample.java
 //  Full credit to the original authors & released under Apache
+//  MQTT Client for CGP
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 
@@ -132,15 +133,14 @@ public class MQTTGCP implements MQTTInterface {
         return false;
     }
 
-
-    public boolean initialise(Intent configuration, Context context)
+    public boolean initialise(Bundle configuration, Context context)
     {
-        deviceId = configuration.getStringExtra(MQTTInterface.MQTT_DEVICE_ID);
-        projectId = configuration.getStringExtra(MQTTInterface.MQTT_PROJECT_ID);
-        cloudRegion = configuration.getStringExtra(MQTTInterface.MQTT_CLOUD_REGION);
-        registryId = configuration.getStringExtra(MQTTInterface.MQTT_REGISTRY_ID);
-        algorithm = configuration.getStringExtra(MQTTInterface.MQTT_ALGORITHM);
-        privateKeyFile = configuration.getStringExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME);
+        deviceId = configuration.getString(MQTTInterface.MQTT_DEVICE_ID);
+        projectId = configuration.getString(MQTTInterface.MQTT_PROJECT_ID);
+        cloudRegion = configuration.getString(MQTTInterface.MQTT_CLOUD_REGION);
+        registryId = configuration.getString(MQTTInterface.MQTT_REGISTRY_ID);
+        algorithm = configuration.getString(MQTTInterface.MQTT_ALGORITHM);
+        privateKeyFile = configuration.getString(MQTTInterface.MQTT_PRIVATE_KEY_NAME);
         if (deviceId == null || projectId == null || cloudRegion == null || registryId == null ||
                 algorithm == null || privateKeyFile == null)
         {

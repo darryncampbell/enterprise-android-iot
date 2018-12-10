@@ -1,9 +1,11 @@
 //  Based on https://github.com/awslabs/aws-sdk-android-samples/tree/master/AndroidPubSub/src/com/amazonaws/demo/androidpubsub
+//  MQTT Client for AWS
 
 package com.darryncampbell.enterprise.android.iot.client.aws;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -26,7 +28,6 @@ import com.darryncampbell.enterprise.android.iot.client.UserConfig;
 import java.security.KeyStore;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.UUID;
 
 public class MQTTAWS implements MQTTInterface {
 
@@ -52,13 +53,13 @@ public class MQTTAWS implements MQTTInterface {
     public static String TAG = "ent-iot-client";
 
     @Override
-    public boolean initialise(Intent configuration, Context context) {
+    public boolean initialise(Bundle configuration, Context context) {
         this.context = context;
-        deviceId = configuration.getStringExtra(MQTTInterface.MQTT_DEVICE_ID);
-        awsEndpoint = configuration.getStringExtra(MQTTInterface.MQTT_AWS_ENDPOINT);
-        cognitoPoolId = configuration.getStringExtra(MQTTInterface.MQTT_COGNITO_POOL_ID);
-        policyName = configuration.getStringExtra(MQTTInterface.MQTT_POLICY_NAME);
-        String cloudRegionString = configuration.getStringExtra(MQTTInterface.MQTT_CLOUD_REGION);
+        deviceId = configuration.getString(MQTTInterface.MQTT_DEVICE_ID);
+        awsEndpoint = configuration.getString(MQTTInterface.MQTT_AWS_ENDPOINT);
+        cognitoPoolId = configuration.getString(MQTTInterface.MQTT_COGNITO_POOL_ID);
+        policyName = configuration.getString(MQTTInterface.MQTT_POLICY_NAME);
+        String cloudRegionString = configuration.getString(MQTTInterface.MQTT_CLOUD_REGION);
         try
         {
             MY_REGION = Regions.fromName(cloudRegionString);

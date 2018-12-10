@@ -3,4 +3,8 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="title_connect">Connect</string>
     <string name="title_dummy_data">Send Data</string>
+    <string name="defaultLatitude">-36.8485</string>
+    <string name="defaultLongitude">174.7633</string>
+    <string name="defaultBatteryLevel">90</string>
+    <string name="defaultBatteryHealth">80</string>
 </resources>

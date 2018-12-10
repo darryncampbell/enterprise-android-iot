@@ -35,7 +35,6 @@ import java.text.SimpleDateFormat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CONNECTION_STRING;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_SERVER_ENDPOINT;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_ALGORITHM;
 import static com.darryncampbell.enterprise.android.iot.client.MQTTInterface.MQTT_CLOUD_REGION;
@@ -62,7 +61,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
             mGoogleApiClient.connect();
     }
 
-    protected synchronized void buildGoogleApiClient(Context context) {
+    private synchronized void buildGoogleApiClient(Context context) {
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -95,7 +94,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
     {
         //  The details of the MQTT client endpoint are included as input data to the WorkManager job
         int serverEndpoint = getInputData().getInt(MQTT_SERVER_ENDPOINT, R.id.radioGCP);
-        Intent connectionConfiguration = new Intent();
+        Bundle connectionConfiguration = new Bundle();
         String deviceId = getInputData().getString(MQTT_DEVICE_ID);
         if (serverEndpoint == R.id.radioGCP)
         {
@@ -104,12 +103,12 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
             String privateKeyName = getInputData().getString(MQTT_PRIVATE_KEY_NAME);
             String algorithm = getInputData().getString(MQTT_ALGORITHM);
             String cloudRegion = getInputData().getString(MQTT_CLOUD_REGION);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_PROJECT_ID, projectId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegion);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_REGISTRY_ID, registryId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_ALGORITHM, algorithm);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_PRIVATE_KEY_NAME, privateKeyName);
+            connectionConfiguration.putString(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+            connectionConfiguration.putString(MQTTInterface.MQTT_PROJECT_ID, projectId);
+            connectionConfiguration.putString(MQTTInterface.MQTT_CLOUD_REGION, cloudRegion);
+            connectionConfiguration.putString(MQTTInterface.MQTT_REGISTRY_ID, registryId);
+            connectionConfiguration.putString(MQTTInterface.MQTT_ALGORITHM, algorithm);
+            connectionConfiguration.putString(MQTTInterface.MQTT_PRIVATE_KEY_NAME, privateKeyName);
             mqtt = new MQTTGCP();
             Log.v(TAG, "Device ID: " + deviceId + ", project ID" + projectId);
         }
@@ -119,19 +118,19 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
             String cognitoPoolId = getInputData().getString(MQTTInterface.MQTT_COGNITO_POOL_ID);
             String policyName = getInputData().getString(MQTTInterface.MQTT_POLICY_NAME);
             String cloudRegionString = getInputData().getString(MQTTInterface.MQTT_CLOUD_REGION);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_AWS_ENDPOINT, awsEndpoint);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_COGNITO_POOL_ID, cognitoPoolId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_POLICY_NAME, policyName);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_CLOUD_REGION, cloudRegionString);
+            connectionConfiguration.putString(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+            connectionConfiguration.putString(MQTTInterface.MQTT_AWS_ENDPOINT, awsEndpoint);
+            connectionConfiguration.putString(MQTTInterface.MQTT_COGNITO_POOL_ID, cognitoPoolId);
+            connectionConfiguration.putString(MQTTInterface.MQTT_POLICY_NAME, policyName);
+            connectionConfiguration.putString(MQTTInterface.MQTT_CLOUD_REGION, cloudRegionString);
             mqtt = new MQTTAWS();
             Log.v(TAG, "Device ID: " + deviceId);
         }
         else if (serverEndpoint == R.id.radioAzure)
         {
             String connectionString = getInputData().getString(MQTTInterface.MQTT_CONNECTION_STRING);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_DEVICE_ID, deviceId);
-            connectionConfiguration.putExtra(MQTTInterface.MQTT_CONNECTION_STRING, connectionString);
+            connectionConfiguration.putString(MQTTInterface.MQTT_DEVICE_ID, deviceId);
+            connectionConfiguration.putString(MQTTInterface.MQTT_CONNECTION_STRING, connectionString);
             mqtt = new MQTTAzure();
             Log.v(TAG, "Device ID: " + deviceId);
         }
@@ -149,15 +148,20 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
         //  Battery info
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = getApplicationContext().registerReceiver(null, ifilter);
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        float batteryPct;
-        if (level != -1 && scale != -1)
-            batteryPct = (level / (float)scale) * 100f;
-        else
-            batteryPct = -1;
-        //  Zebra specific battery health
-        int batteryHealthPct = batteryStatus.getIntExtra("health_percentage", -1);
+        float batteryPct = 0.0f;
+        int batteryHealthPct = 0;
+        if (batteryStatus != null)
+        {
+            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            if (level != -1 && scale != -1)
+                batteryPct = (level / (float)scale) * 100f;
+            else
+                batteryPct = -1;
+
+            //  Zebra specific battery health
+            batteryHealthPct = batteryStatus.getIntExtra("health_percentage", -1);
+        }
 
         //  Connect to MQTT server every time we want to send rather rather than try to maintain the connection
         if (mqtt != null && mqtt.connect())
@@ -223,7 +227,6 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                                 String formattedTime = formatter.format(dt);
                                 updateStatusOnMainActivity("Real data published to MQTT at " + formattedTime);
                             }
-                            //  Regardless of whether the publish succeeded or failed, disconnect from the server
                             int retries = 0;
                             try {
                                 while (mqtt.getPublishInProgress())
@@ -239,8 +242,10 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                                 }
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
+                                updateStatusOnMainActivity("Real data failed to publish (timed out)");
                             }
 
+                            //  Regardless of whether the publish succeeded or failed, disconnect from the server
                             mqtt.disconnect();
                         }
                     })

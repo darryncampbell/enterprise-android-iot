@@ -2,9 +2,11 @@ package com.darryncampbell.enterprise.android.iot.client.azure;
 
 //  Based on https://github.com/Azure-Samples/azure-iot-samples-java.  Full credit to the original
 //  author
+//  MQTT Client for Azure
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.darryncampbell.enterprise.android.iot.client.MQTTInterface;
@@ -35,9 +37,9 @@ public class MQTTAzure implements MQTTInterface {
     private boolean publishInProgress = false;
 
     @Override
-    public boolean initialise(Intent configuration, Context context) {
+    public boolean initialise(Bundle configuration, Context context) {
         this.context = context;
-        connectionString = configuration.getStringExtra(MQTTInterface.MQTT_CONNECTION_STRING);
+        connectionString = configuration.getString(MQTTInterface.MQTT_CONNECTION_STRING);
         return true;
     }
 
