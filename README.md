@@ -24,5 +24,13 @@ This folder contains a simple test application which can be used to either:
 - Publish a sample MQTT message over the test connection
 - Publish real device data to the selected cloud IOT instance (via MQTT)
 
+### Client Screenshots
+
+![Screenshot 1](https://raw.githubusercontent.com/darryncampbell/enterprise-android-iot/master/client/screenshots/tc57_1.png)
+![Screenshot 2](https://raw.githubusercontent.com/darryncampbell/enterprise-android-iot/master/client/screenshots/tc57_2.png)
+![Screenshot 3](https://raw.githubusercontent.com/darryncampbell/enterprise-android-iot/master/client/screenshots/tc57_3.png)
+![Screenshot 4](https://raw.githubusercontent.com/darryncampbell/enterprise-android-iot/master/client/screenshots/tc57_4.png)
+
+
 **Notes:**
 The client has been tested on both consumer Android and Zebra enterprise devices, though not extensively.  Battery health, as reported by the client, is only available on Zebra devices as part of [Power Precision Plus](https://www.zebra.com/us/en/products/accessories/powerprecision-battery-solutions.html) 
