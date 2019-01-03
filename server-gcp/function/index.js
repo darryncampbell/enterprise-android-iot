@@ -20,7 +20,7 @@ exports.iot = function (event, callback) {
   var batteryLevel = attrs[5];
   var deviceId = attrs[0];
   if (batteryLevel <= 15) {
-    console.error(new Error('Battery Level: ' + batteryLevel + ' less than error thredshold (15%) for ' + deviceId));
+    console.error(new Error('Battery Level: ' + batteryLevel + ' less than error threshold (15%) for ' + deviceId));
   }
   
   callback();
