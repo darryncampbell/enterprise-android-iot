@@ -10,6 +10,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -66,9 +67,6 @@ dependencies {
     }
 
     //  Work Manager
-    def work_version = "1.0.0-alpha11"
+    def work_version = "1.0.0"
     implementation "android.arch.work:work-runtime:$work_version" // use -ktx for Kotlin
-    // optional - Firebase JobDispatcher support
-    implementation "android.arch.work:work-firebase:$work_version"
-
 }

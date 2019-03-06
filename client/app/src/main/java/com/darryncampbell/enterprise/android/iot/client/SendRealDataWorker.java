@@ -177,7 +177,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                         {
                             //  Successfully connected to cloud mqtt, publish data
                             updateStatusOnMainActivity("Unable to connect to AWS");
-                            return Result.SUCCESS;
+                            return Result.success();
                         }
                     }
                 } catch (InterruptedException e) {
@@ -191,7 +191,7 @@ public class SendRealDataWorker extends Worker implements GoogleApiClient.Connec
                 String connectionErrorMessage = mqtt.getLastConnectionError();
                 updateStatusOnMainActivity(connectionErrorMessage);
             }
-        return Result.SUCCESS;
+        return Result.success();
     }
 
     private void updateFusedLocationAndSend(final String deviceId, final String model, final int batteryLevel,
